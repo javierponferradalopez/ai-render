@@ -49,10 +49,10 @@ Engine ha hecho su trabajo y antes de que se pinte un solo píxel.
 _Avoid_: layout, escena posicionada
 
 **Drawing Surface**:
-Con qué se pintan finalmente los píxeles dentro del visor. Que esté hecha de
-tecnología web es invisible para todo lo que hay aguas arriba, y no contradice
+Con qué se pinta finalmente dentro del visor. De qué está hecha —celdas de texto
+o tecnología web— es invisible para todo lo que hay aguas arriba, y no contradice
 la prohibición del Visual Protocol: lo prohibido es que el **agente** produzca
-HTML, no que exista HTML.
+HTML o caracteres de dibujo, no que existan.
 _Avoid_: renderer, canvas, pintor
 
 **Renderer**:
@@ -60,6 +60,13 @@ Término contaminado: mezcla el Layout Engine con la Drawing Surface, que son
 piezas de primera clase separadas y sustituibles por separado. Nombrar la que
 toca.
 _Avoid_: usar la palabra a secas
+
+**Límite honesto**:
+El tamaño máximo de vista que el visor dibuja sin mentir. Pasado ese punto la
+pizarra no dibuja peor: se para y lo dice. Existe porque la Drawing Surface
+elegida produce lecturas falsas por encima de cierto número de nodos, y dibujar
+una relación que no existe es peor que no dibujar nada.
+_Avoid_: límite a secas, truncado, degradación
 
 ### Las piezas vivas
 
@@ -69,9 +76,9 @@ de la pizarra. La verdad vive aquí.
 _Avoid_: backend, host
 
 **Visor**:
-La página autocontenida que recibe una escena y la pinta. Es tonto por diseño:
-no guarda nada, y recargarlo no pierde nada porque el estado no es suyo.
-_Avoid_: frontend, cliente, viewer, app
+Lo que recibe una escena y la pinta, en su propia ventana. Es tonto por diseño:
+no guarda nada, y reiniciarlo no pierde nada porque el estado no es suyo.
+_Avoid_: frontend, cliente, viewer, app, página
 
 **Superficie de entrega**:
 Por dónde llega el visor a los ojos del usuario. Distinta de la Drawing Surface,
