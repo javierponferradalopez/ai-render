@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/14 — copia congelada, no la edites.
+
 # La experiencia de instalación
 
 Type: grilling

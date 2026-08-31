@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/10 — copia congelada, no la edites.
+
 # El presupuesto de tokens
 
 Type: grilling

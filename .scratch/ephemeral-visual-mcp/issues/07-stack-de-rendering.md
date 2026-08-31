@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/8 — copia congelada, no la edites.
+
 # El stack de rendering: layout engine + drawing surface
 
 Type: grilling

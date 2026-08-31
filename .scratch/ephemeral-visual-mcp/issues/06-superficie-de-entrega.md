@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/7 — copia congelada, no la edites.
+
 # La superficie de entrega del visor
 
 Type: grilling

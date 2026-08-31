@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/15 — copia congelada, no la edites.
+
 # ¿Qué añade esto sobre Mermaid?
 
 Type: grilling

@@ -1,3 +1,8 @@
+> **MIGRADO A GITHUB (2026-08-31).** El mapa vivo es
+> https://github.com/javierponferradalopez/ai-render/issues/1 y sus sub-issues.
+> Este fichero es una copia congelada: **no lo edites**. Lo único que sigue vivo
+> aquí son los informes de `research/`, que los issues enlazan.
+
 # Mapa — Pizarra efímera para agentes (`ephemeral-visual-mcp`)
 
 ## Destination

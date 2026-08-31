@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/3 — copia congelada, no la edites.
+
 # Motores de layout para grafos dirigidos
 
 Type: research

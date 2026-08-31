@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/5 — copia congelada, no la edites.
+
 # El MCP de tldraw: arquitectura y coste en tokens
 
 Type: research

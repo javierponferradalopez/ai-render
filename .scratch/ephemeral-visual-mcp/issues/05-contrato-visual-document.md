@@ -1,3 +1,5 @@
+> **MIGRADO A GITHUB (2026-08-31).** Ticket vivo: https://github.com/javierponferradalopez/ai-render/issues/6 — copia congelada, no la edites.
+
 # El contrato del VisualDocument
 
 Type: grilling
