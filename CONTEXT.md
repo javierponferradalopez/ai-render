@@ -15,8 +15,9 @@ _Avoid_: canvas (en español), lienzo, board, tablero
 
 **Efímero**:
 Que muere con la sesión MCP, no con la disciplina del agente. Un artefacto
-efímero no se guarda, no se exporta y no sobrevive a la conversación que lo
-motivó.
+efímero no se guarda, no se exporta y no sobrevive a la sesión MCP que lo
+motivó. Una sesión MCP **no** es una conversación: `/clear` acaba la conversación
+y deja viva la sesión, así que la pizarra le sobrevive.
 _Avoid_: temporal, volátil
 
 **Vista**:
@@ -71,16 +72,27 @@ _Avoid_: límite a secas, truncado, degradación
 ### Las piezas vivas
 
 **Servidor MCP**:
-El proceso local que expone las herramientas al agente y es **dueño del estado**
-de la pizarra. La verdad vive aquí.
+Lo que expone las herramientas al agente y es **dueño del estado** de la pizarra.
+La verdad vive aquí. No es un proceso propio: comparte proceso con el Visor y
+vive en un hilo distinto del suyo.
 _Avoid_: backend, host
 
 **Visor**:
 Lo que recibe una escena y la pinta, en su propia ventana. Es tonto por diseño:
-no guarda nada, y reiniciarlo no pierde nada porque el estado no es suyo.
+no guarda nada, y cerrar su ventana no pierde nada porque el estado no es suyo.
+No se reinicia: su ventana se oculta y se vuelve a mostrar dentro del mismo
+proceso, que sólo muere con la sesión MCP.
 _Avoid_: frontend, cliente, viewer, app, página
 
 **Superficie de entrega**:
 Por dónde llega el visor a los ojos del usuario. Distinta de la Drawing Surface,
 que es con qué se pinta dentro.
 _Avoid_: superficie a secas
+
+**Proceso de la pizarra**:
+El único proceso que hay, y que es a la vez Servidor MCP y Visor. Lo lanza el
+host como hijo y le habla por stdio. Reparte los dos papeles entre hilos: el
+principal dibuja, el secundario sirve. Cuál manda no es simétrico — el hilo que
+sirve es el que sabe qué hora es y el que decide cuándo sale el proceso, porque
+el que dibuja se congela cuando el sistema tapa la ventana.
+_Avoid_: demonio, daemon, servidor a secas
