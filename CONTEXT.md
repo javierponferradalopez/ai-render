@@ -8,10 +8,13 @@ al revés.
 
 ### El canal
 
-**Pizarra**:
+**Pizarra** — `flipchart` en código:
 El canal visual temporal en su conjunto. Existe para que el usuario entienda lo
-que el agente está diciendo, no para guardar lo que el agente dibuja.
-_Avoid_: canvas (en español), lienzo, board, tablero
+que el agente está diciendo, no para guardar lo que el agente dibuja. El nombre
+inglés es provisional y su metáfora cojea en un punto: un rotafolio enseña una
+hoja cada vez, y la Pizarra enseña N Vistas conviviendo.
+_Avoid_: canvas (en español), lienzo, board, tablero; y como identificadores,
+`canvas`, `board` o `whiteboard`
 
 **Efímero**:
 Que muere con la sesión MCP, no con la disciplina del agente. Un artefacto
@@ -88,6 +91,12 @@ _Avoid_: frontend, cliente, viewer, app, página
 Por dónde llega el visor a los ojos del usuario. Distinta de la Drawing Surface,
 que es con qué se pinta dentro.
 _Avoid_: superficie a secas
+
+**Lanzador**:
+Lo que garantiza que el Proceso de la pizarra existe antes de arrancarlo: si el
+ejecutable no está, lo trae. Es lo que el host invoca, así que un fallo suyo se
+ve como un servidor MCP que no arranca.
+_Avoid_: instalador, wrapper, shim, script de arranque
 
 **Proceso de la pizarra**:
 El único proceso que hay, y que es a la vez Servidor MCP y Visor. Lo lanza el
