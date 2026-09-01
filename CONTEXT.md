@@ -93,10 +93,19 @@ que es con qué se pinta dentro.
 _Avoid_: superficie a secas
 
 **Lanzador**:
-Lo que garantiza que el Proceso de la pizarra existe antes de arrancarlo: si el
-ejecutable no está, lo trae. Es lo que el host invoca, así que un fallo suyo se
-ve como un servidor MCP que no arranca.
+Lo que el host invoca para que exista el Proceso de la pizarra. **No lo trae**: el
+ejecutable ya está en la máquina cuando el lanzador corre. Y nunca falla, porque su
+fallo no se ve como un error sino como una pizarra que deja de existir sin decir por
+qué; cuando no puede cederle el sitio, se queda hablando él como Servidor de aviso.
 _Avoid_: instalador, wrapper, shim, script de arranque
+
+**Servidor de aviso**:
+La cara del Lanzador cuando no hay Proceso de la pizarra al que ceder el sitio.
+Habla lo justo para decir que la pizarra no está operativa y qué se ha encontrado;
+no dibuja, no guarda nada y no intenta arreglarse. Existe porque el silencio es el
+único fallo que el producto no puede permitirse: no hay nadie más que pueda
+contárselo al usuario.
+_Avoid_: stub, fallback, modo degradado, servidor a secas
 
 **Proceso de la pizarra**:
 El único proceso que hay, y que es a la vez Servidor MCP y Visor. Lo lanza el
