@@ -1,0 +1,24 @@
+flowchart TB
+  subgraph api["API"]
+    Controller["OrderController"]
+    DTO["OrderDTO"]
+  end
+  subgraph app["Application"]
+    UseCase["PlaceOrder"]
+    Port["OrderRepository (port)"]
+  end
+  subgraph domain["Domain"]
+    Order["Order"]
+    Money["Money"]
+  end
+  subgraph infra["Infrastructure"]
+    Prisma["PrismaOrderRepository"]
+    Stripe["StripeGateway"]
+  end
+  Controller --> DTO
+  Controller --> UseCase
+  UseCase --> Port
+  UseCase --> Order
+  Order --> Money
+  Prisma -.implements.-> Port
+  Stripe --> Money
