@@ -49,10 +49,10 @@ Engine ha hecho su trabajo y antes de que se pinte un solo píxel.
 _Avoid_: layout, escena posicionada
 
 **Drawing Surface**:
-Con qué se pinta finalmente dentro del visor. De qué está hecha —celdas de texto
-o tecnología web— es invisible para todo lo que hay aguas arriba, y no contradice
-la prohibición del Visual Protocol: lo prohibido es que el **agente** produzca
-HTML o caracteres de dibujo, no que existan.
+Con qué se pinta finalmente dentro del visor. De qué está hecha es invisible para
+todo lo que hay aguas arriba, y no contradice la prohibición del Visual Protocol:
+lo prohibido es que el **agente** produzca HTML o caracteres de dibujo, no que
+existan.
 _Avoid_: renderer, canvas, pintor
 
 **Renderer**:
