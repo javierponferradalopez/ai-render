@@ -1,0 +1,14 @@
+{
+  "name": "toy-market",
+  "owner": {
+    "name": "flipchart research"
+  },
+  "plugins": [
+    {
+      "name": "toy",
+      "source": "./plugins/toy",
+      "description": "Plugin de juguete para medir la mecanica de plugins"
+    }
+  ],
+  "description": "Marketplace de juguete del laboratorio de flipchart"
+}
