@@ -1,0 +1,6 @@
+{
+  "name": "fat",
+  "description": "Plugin de juguete con un blob sintetico de 40 MB",
+  "version": "0.0.1",
+  "author": {"name": "ai-render lab"}
+}
