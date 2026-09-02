@@ -1,0 +1,30 @@
+classDiagram
+  class ProcesoDeLaPizarra {
+    -visor: Visor
+    -servidor: ServidorMCP
+    +run()
+  }
+  class ServidorMCP {
+    -pizarra: Pizarra
+    +show(view_id, mermaid)
+    +clear()
+  }
+  class Pizarra {
+    -vistas: Map~str, Vista~
+    +reemplazar(id, vista)
+    +vivas() List~str~
+  }
+  class Vista {
+    +id: str
+    +documento: VisualDocument
+    +svg: str
+  }
+  class Visor {
+    +mostrar(vistas)
+    +ocultar()
+  }
+  ProcesoDeLaPizarra *-- ServidorMCP
+  ProcesoDeLaPizarra *-- Visor
+  ServidorMCP *-- Pizarra
+  Pizarra o-- Vista
+  ServidorMCP ..> Visor : envia SVG

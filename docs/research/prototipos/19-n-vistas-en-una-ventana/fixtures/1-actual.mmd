@@ -1,0 +1,33 @@
+classDiagram
+  class ProcesoDeLaPizarra {
+    -hilo_principal: Visor
+    -hilo_secundario: ServidorMCP
+    +run()
+  }
+  class ServidorMCP {
+    -pizarra: Pizarra
+    +show(id, doc)
+    +update(id, patch)
+    +clear()
+  }
+  class Visor {
+    +mostrar(svg)
+    +ocultar()
+  }
+  class Pizarra {
+    -vistas: Map~str, Vista~
+    +reemplazar(id, vista)
+  }
+  class Vista {
+    +id: str
+    +documento: VisualDocument
+  }
+  ProcesoDeLaPizarra *-- ServidorMCP
+  ProcesoDeLaPizarra *-- Visor
+  ServidorMCP *-- Pizarra
+  Pizarra o-- Vista
+  ServidorMCP ..> Visor : envia SVG
+  class Lanzador {
+    +exec()
+  }
+  Lanzador ..> ProcesoDeLaPizarra : lanza

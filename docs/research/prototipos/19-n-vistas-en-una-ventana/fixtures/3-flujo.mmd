@@ -1,0 +1,18 @@
+flowchart LR
+  subgraph host["Claude Code"]
+    Agente["Agente"]
+  end
+  subgraph proceso["Proceso de la pizarra"]
+    subgraph srv["hilo servidor"]
+      MCP["Servidor MCP"]
+      Estado["Pizarra (N Vistas)"]
+      Layout["mmdr (crate)"]
+    end
+    subgraph vis["hilo principal"]
+      Ventana["Visor (egui)"]
+    end
+  end
+  Agente -->|stdio JSON-RPC| MCP
+  MCP --> Estado
+  Estado --> Layout
+  Layout -->|SVG| Ventana
