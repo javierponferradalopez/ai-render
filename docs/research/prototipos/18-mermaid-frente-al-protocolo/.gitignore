@@ -1,0 +1,6 @@
+# lo baja sondea-mmdr.sh con el sha256 verificado
+mmdr
+mmdr.tar.gz
+# lo instala npm, 489 MB
+node_modules/
+package-lock.json
