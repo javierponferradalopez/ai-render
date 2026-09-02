@@ -11,10 +11,10 @@ al revés.
 **Pizarra** — `flipchart` en código:
 El canal visual temporal en su conjunto. Existe para que el usuario entienda lo
 que el agente está diciendo, no para guardar lo que el agente dibuja. Guarda N
-Vistas y el Visor enseña una cada vez, con las demás a un clic, así que el nombre
+Vistas y el Visor enseña una cada vez, sin índice de las demás, así que el nombre
 inglés —provisional— acierta con la metáfora: un rotafolio es exactamente eso.
-Quién pasa la hoja no es el usuario: es el agente, porque la Pizarra es su canal
-para explicarse.
+Quién pasa la hoja es el agente, porque la Pizarra es su canal para explicarse; el
+usuario puede retroceder una hoja, y para cualquier otra cosa se lo pide.
 _Avoid_: canvas (en español), lienzo, board, tablero; y como identificadores,
 `canvas`, `board` o `whiteboard`
 
@@ -96,8 +96,8 @@ vive en un hilo distinto del suyo.
 _Avoid_: backend, host
 
 **Visor**:
-Lo que recibe una escena y la pinta, en su propia ventana: una pestaña por Vista,
-titulada con su id, y la que el agente acaba de mostrar delante. Es tonto por
+Lo que recibe una escena y la pinta, en su propia ventana: una hoja a la vista,
+titulada con el id de su Vista, y la que el agente acaba de mostrar delante. Es tonto por
 diseño: no guarda nada, y cerrar su ventana no pierde nada porque el estado no es
 suyo.
 No se reinicia: su ventana se oculta y se vuelve a mostrar dentro del mismo
