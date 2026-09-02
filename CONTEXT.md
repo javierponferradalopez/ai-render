@@ -26,7 +26,9 @@ _Avoid_: temporal, volátil
 **Vista**:
 Una de las N representaciones con nombre que conviven en la pizarra a la vez —
 "actual" junto a "propuesto", o un diagrama de clases junto a un flujo. Se
-identifica por su `id`, y volver a mostrarla sobre ese `id` la reemplaza.
+identifica por su `id`, y volver a mostrarla sobre ese `id` la reemplaza. Ese `id`
+es además su nombre visible: no hay un segundo título, así que el nombre que el
+agente dice en voz alta y el que ve el usuario son el mismo.
 _Avoid_: diagrama, escena, tab, pestaña
 
 ### Las capas
@@ -75,11 +77,12 @@ no dibujar nada.
 _Avoid_: límite a secas, truncado, degradación
 
 **Nodo fantasma**:
-El nodo que el idioma inventa cuando una relación nombra un id que nadie declaró.
-Se dibuja vacío al lado del que se quiso nombrar, así que no se lee como el error
-que es sino como algo de lo que se sabe menos. Es la forma que toma la mentira
-cuando el agente se equivoca escribiendo, y el Límite honesto existe para
-rechazarlo.
+El nodo que el idioma inventa al ver un id que sólo aparece en una relación,
+mientras los demás del mismo diagrama sí traen etiqueta o cuerpo. Lo que engaña es
+la asimetría: sale vacío al lado de uno lleno, así que no se lee como el error que
+es sino como algo de lo que se sabe menos. Un diagrama entero de ids desnudos no
+tiene fantasmas —no promete nada que no cumpla—, y el Límite honesto existe para
+rechazar los que sí lo son.
 _Avoid_: nodo implícito, auto-creación, typo
 
 ### Las piezas vivas
