@@ -1,0 +1,19 @@
+classDiagram
+  class Visor {
+    +mostrar(instantanea)
+  }
+  class Instantanea {
+    +vistas: List~Vista~
+  }
+  class Pizarra {
+    -vistas: Map~str, Vista~
+    +reemplazar(id, vista)
+    +instantanea() Instantanea
+  }
+  class Vista {
+    +id: str
+    +svg: str
+  }
+  Pizarra ..> Instantanea : produce
+  Visor ..> Instantanea : recibe
+  Pizarra o-- Vista

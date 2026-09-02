@@ -46,12 +46,17 @@ que el original a propósito, que es lo que hace saltar el dibujo.
 - **vistas vivas** — apagar Vistas simula una Pizarra más pequeña
 - **al reemplazar** — quieta · salta a ella · quieta + marca
 
+Y `fixtures-variantes/` es una segunda Pizarra: **cuatro variantes del mismo
+enfoque**, homogéneas de tamaño (283–567 de ancho), para el caso que el ticket no
+listaba — enfrentar N versiones de un diseño y elegir una.
+
 ## Cómo se corre
 
 ```sh
 ./genera-vistas.sh                      # baja mmdr =0.3.1 (sha256 verificado) y genera los SVG
 cargo run                               # la ventana, para jugar
-cargo run -- --captura capturas         # regenera las 10 capturas y sale
+cargo run -- --captura capturas         # regenera las capturas y sale
+cargo run -- --vistas variantes --encaje comun   # otra Pizarra, otro encaje de salida
 ```
 
 Requiere `~/.cargo/bin` en el `PATH`. `vistas/`, `mmdr` y `target/` no se
@@ -81,7 +86,14 @@ Lo que la maqueta enseñó nada más encenderse, y que no estaba en el ticket:
    al 128 % **al lado** de `grande` al 27 %, con lo que el diagrama de tres nodos
    se ve cinco veces mayor que el de veinte. Por eso la maqueta abre en *encoger,
    nunca agrandar*, que es un cuarto encaje que el ticket no listaba.
-3. **A 1:1 se lee todo y no cabe casi nada.** `actual` mide 913 px de alto: en una
+3. **Cuatro variantes del mismo enfoque sí caben en columnas.**
+   [Las cuatro se leen](capturas/variantes-columnas.png) — 100 %, 100 %, 55 %, 61 % —,
+   porque son homogéneas: lo que rompe las columnas no es N, es la disparidad de
+   tamaños. Pero salen a **escalas distintas**, y en una pantalla cuyo propósito es
+   elegir una, ver dos al doble que las otras sesga la elección.
+   [Con escala común](capturas/variantes-columnas-escala-comun.png) las cuatro van al
+   55 %: comparables sin sesgo, y justo en el filo de lo legible.
+4. **A 1:1 se lee todo y no cabe casi nada.** `actual` mide 913 px de alto: en una
    ventana de 950 entra una Vista por pantalla, y sobran 900 px de ancho a la
    derecha. Los diagramas de clases salen altos y estrechos, así que la pila
    desperdicia justo la dimensión que sobra.

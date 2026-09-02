@@ -195,6 +195,8 @@ struct Maqueta {
     ir_a: Option<usize>,
 
     captura: Option<PathBuf>,
+    /// ids que sobreviven a la segunda ronda de capturas
+    pares: Vec<String>,
     frames: u64,
 }
 
@@ -249,6 +251,7 @@ impl Maqueta {
             maximizada: None,
             ir_a: None,
             captura,
+            pares: Vec::new(),
             frames: 0,
         }
     }
@@ -589,7 +592,8 @@ impl Maqueta {
             self.maximizada = (self.disposicion == Disposicion::Mezcla).then_some(0);
             // la segunda ronda deja vivas sólo "actual" y "propuesto"
             for v in &mut self.vistas {
-                v.visible = ronda == 0 || v.id == "actual" || v.id == "propuesto";
+                let par = self.pares.contains(&v.id);
+                v.visible = ronda == 0 || par;
             }
         }
         ctx.request_repaint();
@@ -631,8 +635,31 @@ fn main() -> eframe::Result<()> {
         let _ = std::fs::create_dir_all(d);
     }
 
-    let raiz = Path::new(env!("CARGO_MANIFEST_DIR")).join("vistas");
-    let app = Maqueta::nueva(&raiz, captura);
+    // --vistas deja mirar otra Pizarra: p.ej. N variantes del mismo enfoque
+    let raiz = args
+        .iter()
+        .position(|a| a == "--vistas")
+        .and_then(|i| args.get(i + 1))
+        .map(PathBuf::from)
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("vistas"));
+    let mut app = Maqueta::nueva(&raiz, captura);
+    // por defecto la comparación del caso protagonista; con otro set, las dos primeras
+    app.pares = ["actual", "propuesto"]
+        .iter()
+        .map(|s| s.to_string())
+        .filter(|s| app.vistas.iter().any(|v| &v.id == s))
+        .collect();
+    if let Some(e) = args.iter().position(|a| a == "--encaje").and_then(|i| args.get(i + 1)) {
+        app.encaje = match e.as_str() {
+            "natural" => Encaje::Natural,
+            "hueco" => Encaje::AlHueco,
+            "comun" => Encaje::Comun,
+            _ => Encaje::SinAgrandar,
+        };
+    }
+    if app.pares.is_empty() {
+        app.pares = app.vistas.iter().take(2).map(|v| v.id.clone()).collect();
+    }
 
     let opciones = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()

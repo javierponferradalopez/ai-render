@@ -1,0 +1,15 @@
+classDiagram
+  class Visor {
+    +mostrar(vistas)
+    +ocultar()
+  }
+  class Pizarra {
+    -vistas: Map~str, Vista~
+    +reemplazar(id, vista)
+  }
+  class Vista {
+    +id: str
+    +svg: str
+  }
+  Visor ..> Pizarra : lee
+  Pizarra o-- Vista
