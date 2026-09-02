@@ -1,0 +1,10 @@
+classDiagram
+  class Pedido {
+    +String identificador
+    -int contadorprivado
+    #Fecha fechaprotegida
+    ~Moneda totalpaquete
+    +confirmar()
+  }
+  class Linea
+  Pedido --> Linea

@@ -1,0 +1,10 @@
+classDiagram
+  namespace Dominio {
+    class Pedido
+    class Linea
+  }
+  namespace Infraestructura {
+    class RepositorioSql
+  }
+  Pedido --> Linea
+  RepositorioSql ..> Pedido
