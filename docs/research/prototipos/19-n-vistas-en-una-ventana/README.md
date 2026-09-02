@@ -114,6 +114,10 @@ cargo run -- --vistas larga --limpio --guion --encaje sinagrandar --captura capt
 | **la quita el agente** | [3](capturas/escenarios/3-agente-antes.png) | [4](capturas/escenarios/4-agente-despues.png) | no hay `×`. Desaparecen tres, entre ellas **la que estabas mirando**, y la pestaña activa salta sola a `hilos` |
 | **caen solas pasadas 4** | [5](capturas/escenarios/5-tope-antes.png) | [6](capturas/escenarios/6-tope-despues.png) | no hay `×`; un rastro dice *«N retiradas»*. Al llegar `decision-nueva` cae `arranque`, **que era la abierta**, y la activa salta |
 
+Y una séptima toma, [7-show-trae-al-frente](capturas/escenarios/7-show-trae-al-frente.png),
+retrata lo que se decidió: si el agente conduce qué se ve, su `show` deja la Vista
+delante — `decision-nueva` nace al final de la barra y activa, sin que nadie la busque.
+
 Lo que las tres imágenes dicen y las palabras no decían:
 
 - El escenario del usuario es el único donde **la pantalla no cambia sola**. Las

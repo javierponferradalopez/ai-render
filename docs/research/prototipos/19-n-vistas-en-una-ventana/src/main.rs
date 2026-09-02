@@ -729,7 +729,7 @@ struct Toma {
 
 /// Los tres caminos por los que una Vista puede morir, antes y después. Lo que
 /// se retrata no es la mecánica: es lo que el usuario ve de ella.
-const GUION: [Toma; 6] = [
+const GUION: [Toma; 7] = [
     Toma {
         nombre: "1-usuario-antes",
         cierre: Cierre::Usuario,
@@ -765,6 +765,14 @@ const GUION: [Toma; 6] = [
         vivas: &["arranque", "zip-vs-repo", "hilos", "variantes-visor"],
         activa: "arranque",
         retiradas: 3,
+    },
+    Toma {
+        // la decisión firmada: el agente conduce, así que su `show` queda delante
+        nombre: "7-show-trae-al-frente",
+        cierre: Cierre::Agente,
+        vivas: &["actual", "propuesto", "hilos", "variantes-visor", "decision-nueva"],
+        activa: "decision-nueva",
+        retiradas: 0,
     },
     Toma {
         // llega una Vista nueva y cae la más vieja, que era la abierta
