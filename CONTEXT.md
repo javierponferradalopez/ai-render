@@ -32,24 +32,27 @@ _Avoid_: diagrama, escena, tab, pestaña
 ### Las capas
 
 **Visual Protocol**:
-Lo que el agente emite: significado puro —nodos, relaciones, contención—. Tiene
-prohibido expresar HTML, SVG, CSS, coordenadas, tamaños, colores o formas
-concretas. Es la frontera que el agente nunca cruza hacia abajo.
-_Avoid_: formato, payload, DSL
+El subconjunto de Mermaid que el agente tiene permitido escribir: significado
+—nodos, relaciones, contención— con todos los ids declarados y sin nada que pida
+píxeles. Es la frontera que el agente nunca cruza hacia abajo.
+_Avoid_: formato, payload, DSL, y "Mermaid" a secas — el idioma entero no es el
+protocolo
 
 **VisualDocument**:
-El estado semántico completo de una vista, expresado en el Visual Protocol. Es
-lo que el agente describe y lo que el sistema conserva como verdad.
-_Avoid_: modelo, escena, grafo
+El estado semántico completo de una Vista, escrito en el Visual Protocol y
+conservado tal cual. Es la verdad de la Vista, no una copia de algo anterior.
+_Avoid_: modelo, escena, grafo, fuente
 
 **Layout Engine**:
-La pieza que decide dónde va cada cosa. Toma un VisualDocument y produce una
-PositionedScene. El agente no participa en esta decisión.
+La pieza que decide dónde va cada cosa: toma un VisualDocument y produce una
+PositionedScene. Ni el agente ni el usuario participan en esa decisión, y no es
+sustituible — viene con el idioma en la misma pieza que lo entiende.
 _Avoid_: motor de posicionamiento, autolayout
 
 **PositionedScene**:
 Un VisualDocument con geometría ya resuelta: lo que queda cuando el Layout
-Engine ha hecho su trabajo y antes de que se pinte un solo píxel.
+Engine ha hecho su trabajo y antes de que se pinte un solo píxel. Vive dentro del
+Servidor MCP y no cruza al Visor.
 _Avoid_: layout, escena posicionada
 
 **Drawing Surface**:
@@ -61,16 +64,23 @@ _Avoid_: renderer, canvas, pintor
 
 **Renderer**:
 Término contaminado: mezcla el Layout Engine con la Drawing Surface, que son
-piezas de primera clase separadas y sustituibles por separado. Nombrar la que
-toca.
+etapas distintas aunque hoy lleguen en la misma pieza. Nombrar la que toca.
 _Avoid_: usar la palabra a secas
 
 **Límite honesto**:
-El tamaño máximo de vista que el visor dibuja sin mentir. Pasado ese punto la
-pizarra no dibuja peor: se para y lo dice. Existe porque la Drawing Surface
-elegida produce lecturas falsas por encima de cierto número de nodos, y dibujar
-una relación que no existe es peor que no dibujar nada.
+La frontera que la pizarra no cruza dibujando: pasado ese punto no dibuja peor,
+se para y lo dice. Cubre el tamaño de Vista que ya no se lee, y también el
+significado que no se sostiene — dibujar una relación que no existe es peor que
+no dibujar nada.
 _Avoid_: límite a secas, truncado, degradación
+
+**Nodo fantasma**:
+El nodo que el idioma inventa cuando una relación nombra un id que nadie declaró.
+Se dibuja vacío al lado del que se quiso nombrar, así que no se lee como el error
+que es sino como algo de lo que se sabe menos. Es la forma que toma la mentira
+cuando el agente se equivoca escribiendo, y el Límite honesto existe para
+rechazarlo.
+_Avoid_: nodo implícito, auto-creación, typo
 
 ### Las piezas vivas
 
