@@ -15,6 +15,7 @@ que mates el proceso — eso es parte de lo que se mide.
 |---|---|
 | `corre-claude-mermaid.sh` | Instala el competidor, captura su `tools/list`, renderiza dos vistas con nombre, dispara el live reload y enseña la galería que sobrevive |
 | `peaje.py` | Peaje fijo en tokens: competidor real contra un flipchart que trague Mermaid, y el break-even contra el protocolo propio |
+| `peaje-26.py` | Peaje de las variantes de **descripción**: la línea base escueta contra lo que decidió el issue #26, con controles que aíslan cada pieza de enseñanza |
 | `sondea-mmdr.sh` | Qué hace mmdr con lo que Mermaid permite y la pizarra no debería aceptar: `classDef`/`style`/`linkStyle`, basura sintáctica, y un id con typo |
 | `probe.mjs` / `drive.mjs` | Cliente MCP mínimo por stdio — handshake, `tools/list`, `tools/call` con cronómetro |
 
@@ -41,7 +42,22 @@ contra `562d0250…f3223`, el mismo que dejó escrito
 | Protocolo propio con guía de uso *(issue #10)* | 1.047 |
 
 Break-even del protocolo propio: **6,0 retoques** sobre la misma vista, u **8,8**
-si el protocolo lleva guía de uso.
+si el protocolo lleva guía de uso. *Ambas cifras se calcularon con el flipchart en
+204; con las descripciones que decidió el issue #26 (325) bajan a **4,8** y **7,7**.*
+
+**Peaje de las variantes de descripción** (`peaje-26.py`), para el issue #26:
+
+| Variante | tokens |
+|---|---:|
+| Escueto, la línea base del issue #11 | 204 |
+| **Lo que decidió el issue #26** | **325** |
+| …sin la cláusula de la asimetría | 291 |
+| …con el `view_id` sin ejemplo | 312 |
+| …más lo que el #26 decidió *no* contar (estilo, mmdr-vs-Mermaid, cuándo no) | 362 |
+
+Los dos datos que decidieron el ticket: la cláusula de la asimetría cuesta **34**
+tokens y un solo rechazo evitado son 151 de `show` reenviado más el reintento; y lo
+que se calla sólo ahorraba **37**, o sea que callarse no fue por caro.
 
 **Velocidad del competidor**, con Chromium detrás: 1.827 ms en frío, ~485 ms en
 caliente. mmdr hace el mismo `arch.mmd` en 62 ms
@@ -74,3 +90,4 @@ entre `API` y `Application` y saca una arista en una U por un hueco vacío.
   propio dominio de la pizarra, para probar la convivencia
 - `renders/` — las salidas de los dos motores sobre los mismos fuentes
 - `claude-mermaid-tools.json` — su `tools/list` tal cual, capturado
+- `peaje-26.py` — las cinco variantes de descripción del issue #26, con sus controles
