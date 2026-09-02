@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "flipchart": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/launcher.sh",
+      "args": [],
+      "env": { "PROBE_OUT": "${CLAUDE_PLUGIN_DATA}/probe.json" }
+    }
+  }
+}
