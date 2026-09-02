@@ -94,9 +94,11 @@ _Avoid_: superficie a secas
 
 **Lanzador**:
 Lo que el host invoca para que exista el Proceso de la pizarra. **No lo trae**: el
-ejecutable ya está en la máquina cuando el lanzador corre. Y nunca falla, porque su
-fallo no se ve como un error sino como una pizarra que deja de existir sin decir por
-qué; cuando no puede cederle el sitio, se queda hablando él como Servidor de aviso.
+ejecutable ya está en la máquina cuando el lanzador corre. Pero sí lo deja utilizable
+—puede llegar sin permiso de ejecución, y dárselo es trabajo suyo—, porque nadie
+promete en qué estado aparece. Y nunca falla, porque su fallo no se ve como un error
+sino como una pizarra que deja de existir sin decir por qué; cuando no puede cederle
+el sitio, se queda hablando él como Servidor de aviso.
 _Avoid_: instalador, wrapper, shim, script de arranque
 
 **Servidor de aviso**:
