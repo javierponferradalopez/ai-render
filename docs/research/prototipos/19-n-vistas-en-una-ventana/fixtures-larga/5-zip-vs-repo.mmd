@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph zip["zip verificado"]
+    z1["marketplace.json por URL"] --> z2["zip + sha256"]
+    z2 --> z3["binario"]
+  end
+  subgraph repo["binario en el repo"]
+    r1["clon git"] --> r2["historia acumulada"]
+    r2 --> r3["binario"]
+  end

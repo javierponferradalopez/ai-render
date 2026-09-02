@@ -124,6 +124,32 @@ impl AlReemplazar {
     }
 }
 
+/// Cómo desaparece una Vista suelta de la Pizarra. Hoy no desaparece: `show`
+/// la reemplaza y `clear` las mata todas.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Cierre {
+    /// El usuario la cierra con la ✕ de su pestaña.
+    Usuario,
+    /// El agente la retira con una tercera herramienta.
+    Agente,
+    /// Caen solas al pasar de N, sin que nadie lo pida.
+    Tope,
+}
+
+impl Cierre {
+    const TODOS: [Cierre; 3] = [Cierre::Usuario, Cierre::Agente, Cierre::Tope];
+    fn nombre(self) -> &'static str {
+        match self {
+            Cierre::Usuario => "la cierras tú",
+            Cierre::Agente => "la quita el agente",
+            Cierre::Tope => "caen solas pasadas 4",
+        }
+    }
+}
+
+/// Tope de Vistas vivas en el escenario `Cierre::Tope`.
+const TOPE: usize = 4;
+
 // --------------------------------------------------------------------- vistas
 
 /// Una Vista de la Pizarra: su id, su SVG ya parseado y su tamaño natural.
@@ -197,6 +223,13 @@ struct Maqueta {
     captura: Option<PathBuf>,
     /// ids que sobreviven a la segunda ronda de capturas
     pares: Vec<String>,
+    cierre: Cierre,
+    /// retratar el guion de escenarios en vez de las disposiciones
+    guion: bool,
+    /// esconde los interruptores, para ver la ventana como sería de verdad
+    limpio: bool,
+    /// cuántas Vistas se han ido ya, para el rastro del escenario del tope
+    retiradas: usize,
     frames: u64,
 }
 
@@ -252,6 +285,10 @@ impl Maqueta {
             ir_a: None,
             captura,
             pares: Vec::new(),
+            cierre: Cierre::Usuario,
+            guion: false,
+            limpio: false,
+            retiradas: 0,
             frames: 0,
         }
     }
@@ -382,6 +419,57 @@ fn pinta_vista(
         .response
 }
 
+/// La barra de pestañas tal como se vería en el producto. Lo único que cambia
+/// entre los tres escenarios de cierre es lo que aquí se dibuja: la ✕ existe o
+/// no, y el rastro de las que ya se fueron existe o no.
+fn barra_de_pestanas(app: &mut Maqueta, ui: &mut egui::Ui, idx: &[usize]) {
+    let acento = egui::Color32::from_rgb(0x3B, 0x82, 0xF6);
+    ui.horizontal_wrapped(|ui| {
+        // en el escenario del tope, las que cayeron dejan rastro y nada más
+        if app.cierre == Cierre::Tope && app.retiradas > 0 {
+            ui.weak(format!("{} retiradas", app.retiradas));
+            ui.add_space(6.0);
+        }
+        let mut cerrar = None;
+        for &i in idx {
+            let activa = app.activa == i;
+            let relleno = if activa {
+                acento.gamma_multiply(0.22)
+            } else {
+                egui::Color32::TRANSPARENT
+            };
+            let marco = egui::Frame::new()
+                .fill(relleno)
+                .inner_margin(egui::Margin::symmetric(10, 6))
+                .corner_radius(6.0);
+            marco.show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    // el id ES el nombre visible: no hay segundo título
+                    let texto = egui::RichText::new(&app.vistas[i].id);
+                    let texto = if activa { texto.strong() } else { texto };
+                    if ui.add(egui::Label::new(texto).sense(egui::Sense::click())).clicked() {
+                        app.activa = i;
+                    }
+                    if app.vistas[i].marca > 0.0 {
+                        ui.colored_label(egui::Color32::from_rgb(0xE8, 0x7A, 0x00), "•");
+                    }
+                    // sólo un escenario le da mando al usuario sobre la Pizarra
+                    if app.cierre == Cierre::Usuario && ui.small_button("×").clicked() {
+                        cerrar = Some(i);
+                    }
+                });
+            });
+        }
+        if let Some(i) = cerrar {
+            app.vistas[i].visible = false;
+            app.retiradas += 1;
+            if app.activa == i {
+                app.activa = *idx.iter().find(|&&j| j != i).unwrap_or(&i);
+            }
+        }
+    });
+}
+
 fn barra(app: &mut Maqueta, ui: &mut egui::Ui) {
     ui.horizontal_wrapped(|ui| {
         ui.strong("disposición:");
@@ -410,6 +498,12 @@ fn barra(app: &mut Maqueta, ui: &mut egui::Ui) {
         }
         ui.separator();
         ui.checkbox(&mut app.mostrar_nombres, "nombres");
+    });
+    ui.horizontal_wrapped(|ui| {
+        ui.strong("cómo muere una Vista:");
+        for c in Cierre::TODOS {
+            ui.selectable_value(&mut app.cierre, c, c.nombre());
+        }
     });
     ui.horizontal_wrapped(|ui| {
         ui.strong("vistas vivas:");
@@ -441,26 +535,20 @@ fn cuerpo(app: &mut Maqueta, ui: &mut egui::Ui) {
 
     match app.disposicion {
         Disposicion::Pestanas => {
-            ui.horizontal_wrapped(|ui| {
-                for &i in &idx {
-                    let etiqueta = app.vistas[i].id.clone();
-                    if ui
-                        .selectable_label(app.activa == i, etiqueta)
-                        .clicked()
-                    {
-                        app.activa = i;
-                    }
-                }
-            });
+            barra_de_pestanas(app, ui, &idx);
             ui.separator();
             let hueco = ui.available_size();
             egui::ScrollArea::both().show(ui, |ui| {
+                ui.set_min_width(hueco.x);
                 let a = if idx.contains(&app.activa) {
                     app.activa
                 } else {
                     *idx.first().unwrap_or(&0)
                 };
-                pinta_vista(app, ui, a, hueco, false);
+                // una sola Vista a la vista: centrada, que es donde miran los ojos
+                ui.vertical_centered(|ui| {
+                    pinta_vista(app, ui, a, hueco, false);
+                });
             });
         }
 
@@ -563,11 +651,17 @@ impl eframe::App for Maqueta {
             }
         }
 
-        egui::Panel::top(egui::Id::new("barra")).show(ui, |ui| barra(self, ui));
+        if !self.limpio {
+            egui::Panel::top(egui::Id::new("barra")).show(ui, |ui| barra(self, ui));
+        }
         egui::CentralPanel::default().show(ui, |ui| cuerpo(self, ui));
 
         if let Some(dir) = self.captura.clone() {
-            self.rueda_captura(&ctx, &dir);
+            if self.guion {
+                self.rueda_escenarios(&ctx, &dir);
+            } else {
+                self.rueda_captura(&ctx, &dir);
+            }
         }
         self.frames += 1;
     }
@@ -624,6 +718,111 @@ impl Maqueta {
     }
 }
 
+/// Una toma del guion: el estado exacto de la Pizarra que hay que retratar.
+struct Toma {
+    nombre: &'static str,
+    cierre: Cierre,
+    vivas: &'static [&'static str],
+    activa: &'static str,
+    retiradas: usize,
+}
+
+/// Los tres caminos por los que una Vista puede morir, antes y después. Lo que
+/// se retrata no es la mecánica: es lo que el usuario ve de ella.
+const GUION: [Toma; 6] = [
+    Toma {
+        nombre: "1-usuario-antes",
+        cierre: Cierre::Usuario,
+        vivas: &["actual", "propuesto", "transporte", "arranque", "zip-vs-repo", "hilos", "variantes-visor"],
+        activa: "zip-vs-repo",
+        retiradas: 0,
+    },
+    Toma {
+        nombre: "2-usuario-despues",
+        cierre: Cierre::Usuario,
+        vivas: &["propuesto", "zip-vs-repo", "hilos", "variantes-visor"],
+        activa: "zip-vs-repo",
+        retiradas: 3,
+    },
+    Toma {
+        nombre: "3-agente-antes",
+        cierre: Cierre::Agente,
+        vivas: &["actual", "propuesto", "transporte", "arranque", "zip-vs-repo", "hilos", "variantes-visor"],
+        activa: "zip-vs-repo",
+        retiradas: 0,
+    },
+    Toma {
+        // el agente retira la que el usuario estaba mirando
+        nombre: "4-agente-despues",
+        cierre: Cierre::Agente,
+        vivas: &["actual", "propuesto", "hilos", "variantes-visor"],
+        activa: "hilos",
+        retiradas: 0,
+    },
+    Toma {
+        nombre: "5-tope-antes",
+        cierre: Cierre::Tope,
+        vivas: &["arranque", "zip-vs-repo", "hilos", "variantes-visor"],
+        activa: "arranque",
+        retiradas: 3,
+    },
+    Toma {
+        // llega una Vista nueva y cae la más vieja, que era la abierta
+        nombre: "6-tope-despues",
+        cierre: Cierre::Tope,
+        vivas: &["zip-vs-repo", "hilos", "variantes-visor", "decision-nueva"],
+        activa: "zip-vs-repo",
+        retiradas: 4,
+    },
+];
+
+impl Maqueta {
+    /// Recorre el guion retratando cada toma. Es la respuesta a "cómo quedaría
+    /// en la realidad": la misma ventana, sin interruptores por encima.
+    fn rueda_escenarios(&mut self, ctx: &egui::Context, dir: &Path) {
+        const ESPERA: u64 = 6;
+        let paso = (self.frames / ESPERA) as usize;
+        if paso > GUION.len() {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+            return;
+        }
+        if paso < GUION.len() {
+            let t = &GUION[paso];
+            self.disposicion = Disposicion::Pestanas;
+            self.cierre = t.cierre;
+            self.retiradas = t.retiradas;
+            for i in 0..self.vistas.len() {
+                self.vistas[i].visible = t.vivas.contains(&self.vistas[i].id.as_str());
+                if self.vistas[i].id == t.activa {
+                    self.activa = i;
+                }
+            }
+        }
+        ctx.request_repaint();
+
+        if self.frames % ESPERA == ESPERA - 1 && paso < GUION.len() {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(egui::UserData::default()));
+        }
+        let disparo: Vec<std::sync::Arc<egui::ColorImage>> = ctx.input(|s| {
+            s.events
+                .iter()
+                .filter_map(|e| match e {
+                    egui::Event::Screenshot { image, .. } => Some(image.clone()),
+                    _ => None,
+                })
+                .collect()
+        });
+        for img in disparo {
+            let ruta = dir.join(format!("{}.png", GUION[paso.saturating_sub(1)].nombre));
+            let (w, h) = (img.size[0] as u32, img.size[1] as u32);
+            if let Some(buf) = image::RgbaImage::from_raw(w, h, img.as_raw().to_vec()) {
+                let _ = buf.save(&ruta);
+                eprintln!("captura {}", ruta.display());
+            }
+        }
+    }
+}
+
 fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().collect();
     let captura = args
@@ -655,6 +854,15 @@ fn main() -> eframe::Result<()> {
             "hueco" => Encaje::AlHueco,
             "comun" => Encaje::Comun,
             _ => Encaje::SinAgrandar,
+        };
+    }
+    app.limpio = args.iter().any(|a| a == "--limpio");
+    app.guion = args.iter().any(|a| a == "--guion");
+    if let Some(c) = args.iter().position(|a| a == "--escenario").and_then(|i| args.get(i + 1)) {
+        app.cierre = match c.as_str() {
+            "agente" => Cierre::Agente,
+            "tope" => Cierre::Tope,
+            _ => Cierre::Usuario,
         };
     }
     if app.pares.is_empty() {

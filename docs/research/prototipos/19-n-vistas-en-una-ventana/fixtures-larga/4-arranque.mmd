@@ -1,0 +1,4 @@
+flowchart TB
+  Host["Claude Code"] --> Lanzador["Lanzador"]
+  Lanzador -->|exec| Proceso["Proceso de la pizarra"]
+  Lanzador -->|si no puede| Aviso["Servidor de aviso"]

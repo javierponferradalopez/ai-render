@@ -1,0 +1,18 @@
+classDiagram
+  class ServidorMCP {
+    -pizarra: Pizarra
+    +show(view_id, mermaid)
+    +clear()
+  }
+  class Pizarra {
+    -vistas: Map~str, Vista~
+    +vivas() List~str~
+    +olvidar(id)
+  }
+  class Vista {
+    +id: str
+    +svg: str
+    +generacion: u32
+  }
+  ServidorMCP *-- Pizarra
+  Pizarra o-- Vista

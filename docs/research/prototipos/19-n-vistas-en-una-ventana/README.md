@@ -97,3 +97,29 @@ Lo que la maqueta enseñó nada más encenderse, y que no estaba en el ticket:
    ventana de 950 entra una Vista por pantalla, y sobran 900 px de ancho a la
    derecha. Los diagramas de clases salen altos y estrechos, así que la pila
    desperdicia justo la dimensión que sobra.
+
+## Los tres escenarios de cómo muere una Vista
+
+`capturas/escenarios/` retrata la misma ventana —pestañas, sin los interruptores
+por encima— sobre una conversación larga de siete Vistas acumuladas, con el
+usuario mirando `zip-vs-repo`. Se corre así:
+
+```sh
+cargo run -- --vistas larga --limpio --guion --encaje sinagrandar --captura capturas/escenarios
+```
+
+| escenario | antes | después | lo que cambia |
+|---|---|---|---|
+| **la cierras tú** | [1](capturas/escenarios/1-usuario-antes.png) | [2](capturas/escenarios/2-usuario-despues.png) | cada pestaña lleva una `×`. Desaparecen las tres que cerraste; `zip-vs-repo` sigue abierta porque no la tocaste |
+| **la quita el agente** | [3](capturas/escenarios/3-agente-antes.png) | [4](capturas/escenarios/4-agente-despues.png) | no hay `×`. Desaparecen tres, entre ellas **la que estabas mirando**, y la pestaña activa salta sola a `hilos` |
+| **caen solas pasadas 4** | [5](capturas/escenarios/5-tope-antes.png) | [6](capturas/escenarios/6-tope-despues.png) | no hay `×`; un rastro dice *«N retiradas»*. Al llegar `decision-nueva` cae `arranque`, **que era la abierta**, y la activa salta |
+
+Lo que las tres imágenes dicen y las palabras no decían:
+
+- El escenario del usuario es el único donde **la pantalla no cambia sola**. Las
+  otras dos mueven la ventana bajo la mirada de quien está leyendo.
+- La `×` es todo el coste visible de dar el mando: siete glifos en la barra. No
+  hay panel, ni menú, ni segundo control.
+- El rastro *«N retiradas»* del tope es la confesión de una Vista que se fue sin
+  que nadie lo pidiera. Sin él, la Vista desaparece y no queda ni la marca; con
+  él, queda un número que no se puede deshacer.
