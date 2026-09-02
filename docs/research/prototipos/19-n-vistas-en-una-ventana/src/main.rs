@@ -147,6 +147,25 @@ impl Cierre {
     }
 }
 
+/// Cómo se ofrece la pila de Vistas al usuario.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Cabecera {
+    /// Barra con el nombre de todas: una hoja delante, y un índice.
+    Pestanas,
+    /// Rotafolio puro: la hoja de delante, su nombre, y las de detrás contadas.
+    Rotafolio,
+}
+
+impl Cabecera {
+    const TODAS: [Cabecera; 2] = [Cabecera::Pestanas, Cabecera::Rotafolio];
+    fn nombre(self) -> &'static str {
+        match self {
+            Cabecera::Pestanas => "pestañas (con índice)",
+            Cabecera::Rotafolio => "rotafolio (sin índice)",
+        }
+    }
+}
+
 /// Tope de Vistas vivas en el escenario `Cierre::Tope`.
 const TOPE: usize = 4;
 
@@ -224,6 +243,7 @@ struct Maqueta {
     /// ids que sobreviven a la segunda ronda de capturas
     pares: Vec<String>,
     cierre: Cierre,
+    cabecera: Cabecera,
     /// retratar el guion de escenarios en vez de las disposiciones
     guion: bool,
     /// esconde los interruptores, para ver la ventana como sería de verdad
@@ -286,6 +306,7 @@ impl Maqueta {
             captura,
             pares: Vec::new(),
             cierre: Cierre::Usuario,
+            cabecera: Cabecera::Pestanas,
             guion: false,
             limpio: false,
             retiradas: 0,
@@ -470,6 +491,34 @@ fn barra_de_pestanas(app: &mut Maqueta, ui: &mut egui::Ui, idx: &[usize]) {
     });
 }
 
+/// El rotafolio sin índice: sólo la hoja de delante y cuántas quedan detrás.
+/// Lo que aquí falta —los nombres de las demás— es justo lo que se decide.
+fn cabecera_de_rotafolio(app: &mut Maqueta, ui: &mut egui::Ui, idx: &[usize]) {
+    let sitio = idx.iter().position(|&i| i == app.activa).unwrap_or(0);
+    ui.horizontal(|ui| {
+        ui.add_space(4.0);
+        if ui.add_enabled(sitio > 0, egui::Button::new("‹")).clicked() {
+            app.activa = idx[sitio - 1];
+        }
+        // el id ES el nombre visible, y aquí es lo único que se ve de la Pizarra
+        ui.add_space(8.0);
+        ui.label(
+            egui::RichText::new(&app.vistas[app.activa].id)
+                .strong()
+                .size(17.0),
+        );
+        ui.add_space(8.0);
+        if ui
+            .add_enabled(sitio + 1 < idx.len(), egui::Button::new("›"))
+            .clicked()
+        {
+            app.activa = idx[sitio + 1];
+        }
+        ui.add_space(12.0);
+        ui.weak(format!("hoja {} de {}", sitio + 1, idx.len()));
+    });
+}
+
 fn barra(app: &mut Maqueta, ui: &mut egui::Ui) {
     ui.horizontal_wrapped(|ui| {
         ui.strong("disposición:");
@@ -498,6 +547,12 @@ fn barra(app: &mut Maqueta, ui: &mut egui::Ui) {
         }
         ui.separator();
         ui.checkbox(&mut app.mostrar_nombres, "nombres");
+    });
+    ui.horizontal_wrapped(|ui| {
+        ui.strong("cabecera:");
+        for c in Cabecera::TODAS {
+            ui.selectable_value(&mut app.cabecera, c, c.nombre());
+        }
     });
     ui.horizontal_wrapped(|ui| {
         ui.strong("cómo muere una Vista:");
@@ -535,7 +590,10 @@ fn cuerpo(app: &mut Maqueta, ui: &mut egui::Ui) {
 
     match app.disposicion {
         Disposicion::Pestanas => {
-            barra_de_pestanas(app, ui, &idx);
+            match app.cabecera {
+                Cabecera::Pestanas => barra_de_pestanas(app, ui, &idx),
+                Cabecera::Rotafolio => cabecera_de_rotafolio(app, ui, &idx),
+            }
             ui.separator();
             let hueco = ui.available_size();
             egui::ScrollArea::both().show(ui, |ui| {
@@ -866,6 +924,9 @@ fn main() -> eframe::Result<()> {
     }
     app.limpio = args.iter().any(|a| a == "--limpio");
     app.guion = args.iter().any(|a| a == "--guion");
+    if args.iter().any(|a| a == "--rotafolio") {
+        app.cabecera = Cabecera::Rotafolio;
+    }
     if let Some(c) = args.iter().position(|a| a == "--escenario").and_then(|i| args.get(i + 1)) {
         app.cierre = match c.as_str() {
             "agente" => Cierre::Agente,

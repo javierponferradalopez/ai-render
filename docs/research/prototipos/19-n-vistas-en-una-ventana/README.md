@@ -39,6 +39,7 @@ que el original a propósito, que es lo que hace saltar el dibujo.
 ## Los interruptores
 
 - **disposición** — pestañas · columnas · rejilla · apiladas · mezcla
+- **cabecera** — pestañas (con índice) · rotafolio (sin índice)
 - **encaje** — natural (1:1) · encoger nunca agrandar · cada una a su hueco · escala común
 - **zoom** — de la ventana entera · por vista (rueda encima de cada una)
 - **orden** — creación · alfabético · último show
@@ -106,6 +107,7 @@ usuario mirando `zip-vs-repo`. Se corre así:
 
 ```sh
 cargo run -- --vistas larga --limpio --guion --encaje sinagrandar --captura capturas/escenarios
+cargo run -- --vistas larga --limpio --rotafolio     # la cabecera que quedó decidida
 ```
 
 | escenario | antes | después | lo que cambia |
@@ -114,7 +116,11 @@ cargo run -- --vistas larga --limpio --guion --encaje sinagrandar --captura capt
 | **la quita el agente** | [3](capturas/escenarios/3-agente-antes.png) | [4](capturas/escenarios/4-agente-despues.png) | no hay `×`. Desaparecen tres, entre ellas **la que estabas mirando**, y la pestaña activa salta sola a `hilos` |
 | **caen solas pasadas 4** | [5](capturas/escenarios/5-tope-antes.png) | [6](capturas/escenarios/6-tope-despues.png) | no hay `×`; un rastro dice *«N retiradas»*. Al llegar `decision-nueva` cae `arranque`, **que era la abierta**, y la activa salta |
 
-Y una séptima toma, [7-show-trae-al-frente](capturas/escenarios/7-show-trae-al-frente.png),
+Y dos tomas más. [8-rotafolio-sin-indice](capturas/escenarios/8-rotafolio-sin-indice.png)
+es la que manda: **el rotafolio puro**, sin índice — la hoja de delante, su nombre,
+las flechas y *«hoja 5 de 7»*. Es lo que quedó decidido frente a la barra de
+pestañas, que enseñaba los siete nombres a la vez.
+Y [7-show-trae-al-frente](capturas/escenarios/7-show-trae-al-frente.png),
 retrata lo que se decidió: si el agente conduce qué se ve, su `show` deja la Vista
 delante — `decision-nueva` nace al final de la barra y activa, sin que nadie la busque.
 
