@@ -1,11 +1,18 @@
-# flipchart — spec del MVP
+# flipchart — las decisiones del MVP
 
-> Estado final de lo decidido, escrito para quien no ha leído ningún ticket. Lo que no
-> esté aquí, no existe para quien construya. La historia —por dónde se pasó para llegar
-> a esto— vive en los issues del mapa y no se repite en este documento; lo único que
-> entra de ella es lo que sigue siendo una restricción viva.
+> **Qué es esto.** El estado final de lo que quedó decidido al cartografiar el MVP,
+> escrito para quien no ha leído ningún ticket. Hace par con
+> [`CONTEXT.md`](CONTEXT.md): allí el idioma, aquí las decisiones. Los términos en
+> **negrita** están definidos allí.
 >
-> Los términos en **negrita** están definidos en [`CONTEXT.md`](CONTEXT.md).
+> **Qué no es.** No es el spec de construcción: no trae historias de usuario, ni seams de
+> test, ni los cortes verticales del trabajo. Eso lo produce `/to-spec`, que cita este
+> documento —y en particular su §11— en vez de repetirlo.
+>
+> La historia, por dónde se pasó para llegar hasta aquí, vive en los issues del
+> [mapa](https://github.com/javierponferradalopez/ai-render/issues/1) y no se repite en
+> este documento; lo único que entra de ella es lo que sigue siendo una restricción viva.
+> **Lo que no esté escrito aquí, no existe para quien construya.**
 
 ---
 
