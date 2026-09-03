@@ -495,10 +495,12 @@ El servidor se llama **`flipchart`**, así que el host las presenta cualificadas
 (`mcp__flipchart__show`) y el prefijo en el nombre propio no compra namespace: lo duplica y
 tartamudea.
 
-> **Fleco de redacción para el primer día.** Los textos medidos (la descripción de §5.3 y la
-> línea recomendada de §8.2) están escritos con `flipchart_show` / `flipchart_clear`, que es
-> con lo que se midieron el peaje y el disparo. Hay que unificarlos con el nombre real que el
-> host presente al agente, sin cambiar nada más de esos textos.
+> **Fleco de redacción, pagado el 2026-09-03.** Los textos medidos (la descripción de §5.3 y
+> la línea recomendada de §8.2) estaban escritos con `flipchart_show` / `flipchart_clear`, que
+> es con lo que se midieron el peaje y el disparo. Las herramientas se registran como **`show`
+> y `clear`**, y el nombre que el host presenta —comprobado contra una sesión real de Claude
+> Code— es **`mcp__flipchart__show`** / **`mcp__flipchart__clear`**. Es el que llevan ahora los
+> dos textos, y no ha cambiado nada más de ellos.
 
 **No hay `title`.** El `view_id` **es** el nombre visible. Un título aparte permitiría que la
 ventana ponga *"Estructura propuesta del módulo de pedidos"* y el agente diga *"el
@@ -554,10 +556,11 @@ clear() sobre vacío  →  The flipchart was already empty.
 - **`clear()` no cierra la ventana**: la deja en el estado *pizarra vacía* (§6.3).
 
 **Factura por uso** (`cl100k_base`): ~20 tokens un `show` que sale bien, ~35 más por cada
-aviso, ~30-40 un rechazo. El **peaje fijo** de las dos herramientas es **271 tokens en su
-peor caso conocido** — y no es criterio de diseño: lo que se vigila es el coste por uso. (El
-peaje real lo decide además el host: la misma herramienta cuesta +15 tokens con búsqueda de
-herramientas activa y +69 sin ella.)
+aviso, ~30-40 un rechazo. El **peaje fijo** de las dos herramientas, medido el 2026-09-03 sobre
+el `tools/list` que emite el binario, es de **302 tokens en su peor caso conocido** — 264 si se
+descuenta el `$schema` que `rmcp` cuelga de cada esquema y que no dice nada — y no es criterio
+de diseño: lo que se vigila es el coste por uso. (El peaje real lo decide además el host: la
+misma herramienta cuesta +15 tokens con búsqueda de herramientas activa y +69 sin ella.)
 
 ### 5.3 La descripción de las herramientas
 
@@ -566,10 +569,10 @@ llamar**, no a uno al que hay que convencer — y con ese listón, el *cuándo* 
 cae solo: se muda a la línea de instrucciones de proyecto (§8.2), que es el único canal que
 funciona (§8.1).
 
-Texto, medido en **271 tokens**:
+Texto (los **302 tokens** de §5.2 son este texto más los esquemas que lo acompañan):
 
 ```
-flipchart_show
+mcp__flipchart__show
   Show a diagram on the ephemeral flipchart window, as a named view. Takes Mermaid source.
 
   Any id used in a relationship must carry a label or a body when another id in the same
@@ -582,7 +585,7 @@ flipchart_show
             "Current dependencies", not "v1". Reusing a name replaces that view.
   diagram   Mermaid source.
 
-flipchart_clear
+mcp__flipchart__clear
   Remove one view from the flipchart, or all of them. Does not close the window.
 
   view_id   View to remove. Omit to clear the whole flipchart.
@@ -763,7 +766,7 @@ Redacción de referencia:
 
 ```
 Cuando me expliques una estructura o un cambio de estructura, dibújalo en la
-pizarra con flipchart_show en vez de en ASCII o en prosa.
+pizarra con mcp__flipchart__show en vez de en ASCII o en prosa.
 ```
 
 ---
@@ -1014,9 +1017,14 @@ conversación.
    activar la app (**`orderFrontRegardless`** en vez de `makeKeyAndOrderFront`). Si funciona,
    **desaparece el precio que acepta §6.2 sin pagar nada**; si no, la ventana aparece *detrás*
    del terminal y el agente dice que ha dibujado mientras el usuario no ve nada, que es peor.
-2. **Estructura de packages del repo.** El handoff proponía cinco; con Mermaid como idioma
-   sobran los de arriba, y servidor y Visor están en un solo proceso. **Puede que la respuesta
-   sea *un crate y un script de bash*.**
+2. ~~**Estructura de packages del repo.**~~ **CERRADA el 2026-09-03: un crate y un script de
+   bash.** Un solo crate binario `flipchart` con módulos internos — `flipchart` (el estado y las
+   Vistas), `server` (las dos herramientas de `rmcp`), `diagram` (la tubería de mmdr) y `mac`
+   (App Nap y la política de activación) —, más el `launcher.sh` de §10.5. Ni workspace ni un
+   crate por capa: Servidor y Visor comparten proceso, así que un límite de crate entre ellos
+   sería una frontera sin nadie al otro lado. El paquete lleva además un `target` de librería,
+   que es por donde entran los tests de integración; lo que se entrega sigue siendo **un solo
+   fichero**.
 3. **Cómo se testea un renderer visual** sin morir en snapshots. Hay una herramienta ya
    verificada: **`write_layout_dump` es público**, así que la PositionedScene se vuelca a JSON
    sin `--dumpLayout` y sin proceso hijo — es el instrumento para medir regresiones de layout.
