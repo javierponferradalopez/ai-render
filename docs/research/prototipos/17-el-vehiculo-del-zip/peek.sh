@@ -1,6 +1,7 @@
 #!/bin/bash
 # peek.sh <patron> [ventana_bytes] [n_ocurrencia]
-B=/opt/homebrew/Caskroom/claude-code/2.1.228/claude
+# El ejecutable vivo, sea el del cask o el de ~/.local/share/claude/versions.
+B="${CLAUDE_BIN:-$(readlink -f "$(command -v claude)")}"
 pat="$1"; win="${2:-6000}"; nth="${3:-1}"
 off=$(LC_ALL=C grep -a -b -o -- "$pat" "$B" | sed -n "${nth}p" | cut -d: -f1)
 [ -z "$off" ] && { echo "NO MATCH: $pat"; exit 1; }
