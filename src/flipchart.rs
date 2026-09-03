@@ -1,14 +1,7 @@
-use std::sync::mpsc::Sender;
-
 use crate::diagram;
+use crate::viewer::{ViewerCommand, Wire};
 
 const MAX_VIEW_ID_CHARS: usize = 64;
-
-#[derive(Debug)]
-pub enum ViewerCommand {
-    Show { view_id: String },
-    Clear,
-}
 
 #[derive(Debug)]
 struct View {
@@ -19,11 +12,11 @@ struct View {
 #[derive(Debug)]
 pub struct Flipchart {
     views: Vec<View>,
-    viewer: Sender<ViewerCommand>,
+    viewer: Wire,
 }
 
 impl Flipchart {
-    pub fn new(viewer: Sender<ViewerCommand>) -> Self {
+    pub fn new(viewer: Wire) -> Self {
         Self {
             views: Vec::new(),
             viewer,
@@ -48,7 +41,7 @@ impl Flipchart {
             return Err(rejection(id, "diagram must not be empty."));
         }
 
-        let counts = diagram::count(diagram).map_err(|error| rejection(id, &error))?;
+        let drawing = diagram::draw(diagram).map_err(|error| rejection(id, &error))?;
 
         match self.views.iter_mut().find(|view| view.id == id) {
             Some(view) => view.diagram = diagram.to_string(),
@@ -57,14 +50,15 @@ impl Flipchart {
                 diagram: diagram.to_string(),
             }),
         }
-        let _ = self.viewer.send(ViewerCommand::Show {
+        self.viewer.send(ViewerCommand::Show {
             view_id: id.to_string(),
+            svg: drawing.svg,
         });
 
         Ok(format!(
             "Shown as view \"{id}\" ({}, {}). {}",
-            plural(counts.nodes, "node"),
-            plural(counts.edges, "edge"),
+            plural(drawing.nodes, "node"),
+            plural(drawing.edges, "edge"),
             self.views_on_the_flipchart()
         ))
     }
@@ -75,7 +69,7 @@ impl Flipchart {
                 return "The flipchart was already empty.".to_string();
             }
             self.views.clear();
-            let _ = self.viewer.send(ViewerCommand::Clear);
+            self.viewer.send(ViewerCommand::Clear);
             return "Cleared the flipchart. No views.".to_string();
         };
 
@@ -83,7 +77,7 @@ impl Flipchart {
             return format!("No view \"{id}\" on the flipchart. {}", self.views());
         };
         self.views.remove(position);
-        let _ = self.viewer.send(ViewerCommand::Clear);
+        self.viewer.send(ViewerCommand::Clear);
         format!("Cleared view \"{id}\". {}", self.views_on_the_flipchart())
     }
 
@@ -136,16 +130,15 @@ fn plural(count: usize, noun: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::mpsc::{Receiver, channel};
-
     use super::*;
+    use crate::viewer::{Commands, wire};
 
     const DOS_NODOS: &str = "flowchart TD\n  A[Uno] --> B[Dos]\n";
     const TRES_NODOS: &str = "flowchart TD\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
     const UN_NODO: &str = "flowchart TD\n  A[Solo]\n";
 
-    fn pizarra() -> (Flipchart, Receiver<ViewerCommand>) {
-        let (viewer, commands) = channel();
+    fn pizarra() -> (Flipchart, Commands) {
+        let (viewer, commands) = wire();
         (Flipchart::new(viewer), commands)
     }
 
@@ -208,10 +201,23 @@ mod tests {
 
         flipchart.show("actual", DOS_NODOS).unwrap();
 
-        let ViewerCommand::Show { view_id } = commands.recv().unwrap() else {
+        let ViewerCommand::Show { view_id, .. } = commands.recv().unwrap() else {
             panic!("el Visor esperaba un Show");
         };
         assert_eq!(view_id, "actual");
+    }
+
+    #[test]
+    fn al_visor_le_cruza_el_svg_ya_dibujado() {
+        let (mut flipchart, commands) = pizarra();
+
+        flipchart.show("actual", DOS_NODOS).unwrap();
+
+        let ViewerCommand::Show { svg, .. } = commands.recv().unwrap() else {
+            panic!("el Visor esperaba un Show");
+        };
+        assert!(svg.starts_with("<svg"));
+        assert!(svg.contains("Uno"));
     }
 
     #[test]

@@ -17,3 +17,15 @@ pub fn stay_out_of_the_dock(main_thread: MainThreadMarker) {
     NSApplication::sharedApplication(main_thread)
         .setActivationPolicy(NSApplicationActivationPolicy::Accessory);
 }
+
+/// Trae la app al frente. Sólo agarra sobre una app que ya es `Regular`; quien
+/// la sube es el event loop al nacer, y eso es el primer `show`.
+pub fn take_the_focus() {
+    if let Some(app) = application() {
+        app.activate();
+    }
+}
+
+fn application() -> Option<Retained<NSApplication>> {
+    Some(NSApplication::sharedApplication(MainThreadMarker::new()?))
+}

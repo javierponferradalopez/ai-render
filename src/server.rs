@@ -1,5 +1,4 @@
 use std::sync::Mutex;
-use std::sync::mpsc::Sender;
 
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::{CallToolResult, ContentBlock, Implementation, ServerCapabilities, ServerInfo};
@@ -7,7 +6,8 @@ use rmcp::{ServerHandler, ServiceExt, tool, tool_router};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::flipchart::{Flipchart, ViewerCommand};
+use crate::flipchart::Flipchart;
+use crate::viewer::Wire;
 
 #[derive(Deserialize, JsonSchema)]
 pub struct ShowParams {
@@ -31,7 +31,7 @@ pub struct FlipchartServer {
 
 #[tool_router]
 impl FlipchartServer {
-    pub fn new(viewer: Sender<ViewerCommand>) -> Self {
+    pub fn new(viewer: Wire) -> Self {
         Self {
             flipchart: Mutex::new(Flipchart::new(viewer)),
         }
@@ -75,7 +75,7 @@ impl ServerHandler for FlipchartServer {
     }
 }
 
-pub fn serve(viewer: Sender<ViewerCommand>) {
+pub fn serve(viewer: Wire) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
