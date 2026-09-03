@@ -12,6 +12,11 @@ como `arraybuffer` en memoria—, la extracción escribe ficheros nuevos con
 está dentro de un documento de skill ajeno. No hay fichero cuarentenado del que
 heredar el atributo ni código que lo ponga. El vehículo se sostiene.
 
+> **Cerrado el 2026-09-03 por [research 15][r15]:** la mitad que faltaba está corrida
+> contra un release alojado de verdad. No hay cuarentena, el binario llega `100755` y
+> **corre**. Las cinco cosas que aquí quedaron leídas están ahora ejecutadas, y el
+> vehículo se sostiene.
+
 **Pero eso es lectura, no medición, y esta investigación se ha quedado a medias.** La
 mitad del catálogo está ejecutada de punta a punta; la del archive **no**, porque su
 política de URL prohíbe el atajo local que salvó a [research 10][r10] y exige alojar
@@ -410,14 +415,17 @@ disco, **el cliente no ejecuta git ni una vez**, y la factura de [#22][22] —`B
    requisito, y añade una regla nueva: **la versión que manda es la de `plugin.json`,
    dentro del zip**, no la de la entrada del catálogo.
 
-**Y deja abierto lo que era la condición de viabilidad.** La cuarentena no puede aparecer
-por construcción, y eso es un argumento sólido; pero el ticket pedía verlo, y con un
-binario firmado ad-hoc y sin notarizar el único juez definitivo es ejecutarlo. Sin correr
-también: el rechazo por digest cambiado, el modo real del fichero extraído, las cuatro
-formas de zip y el `update` de verdad. Todo eso está escrito en
-[`run-hosted.sh`](./prototipos/17-el-vehiculo-del-zip/run-hosted.sh) y sólo le falta un
-repo público desechable donde publicar el material.
+**Y deja abierto lo que era la condición de viabilidad** — abierto durante un día. La
+cuarentena no puede aparecer por construcción, y eso es un argumento sólido; pero el
+ticket pedía verlo, y con un binario firmado ad-hoc y sin notarizar el único juez
+definitivo es ejecutarlo. Eso, más el rechazo por digest cambiado, el modo real del
+fichero extraído, las cuatro formas de zip y el `update` de verdad, es lo que
+**[research 15][r15] corrió el 2026-09-03** contra un repo público desechable: las cinco
+salieron como este documento predijo, y encima trajeron tres cosas que la lectura no
+podía ver —`com.apple.provenance`, un `spctl -a` que dice `rejected` sobre un binario
+que corre igual, y una caché que se queda con las dos versiones tras el `update`.
 
 [22]: https://github.com/javierponferradalopez/ai-render/issues/22
 [23]: https://github.com/javierponferradalopez/ai-render/issues/23
 [r10]: ./10-el-binario-por-el-clon-del-marketplace.md
+[r15]: ./15-la-cuarentena-medida-y-el-veredicto-del-vehiculo.md

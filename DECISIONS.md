@@ -823,6 +823,12 @@ Con eso **el cliente no ejecuta git ni una vez**, la integridad pasa a estar **v
 —el host comprueba el digest en cada descarga y **rechaza la instalación** si no casa, con el
 error en primer plano—, y lo que queda en disco es un JSON de dos kilobytes más el binario
 extraído en la caché versionada, que se poda sola (`.orphaned_at`, recogida a los 14 días).
+Los tres extremos están **medidos**: ni un fichero `.git`, 2717 bytes de catálogo plano, y el
+rechazo por digest con el esperado y el obtenido dentro del mensaje.
+
+**El pico en disco es `2 × B`, no `B`:** medido, el `update` deja las dos versiones en la caché
+—`…/flipchart/1.0.0` y `…/flipchart/2.0.0`, los dos binarios enteros— hasta que la poda pase.
+Con un universal de ~84 MB eso son ~168 MB entre la actualización y la recogida.
 
 Topes medidos, y hay que respetarlos porque no todos tienen válvula:
 
@@ -845,6 +851,10 @@ Dentro del zip: **`.claude-plugin/plugin.json`, `.mcp.json`, el Lanzador y el bi
   modos `0755` intactos. **El `zip` de la CI es parte del contrato**: el host lee los atributos
   externos y hace `chmod(mode & 0o777)` cuando hay algún bit de ejecución, pero eso depende de
   quién empaquete. Nunca desde el Finder — mete `__MACOSX/` y `.DS_Store`.
+- **El `sha256` se declara siempre en la entrada, y el generador lo verifica.** Medido: el
+  esquema del host lo trata como **opcional**, y una entrada sin él **instala igual y sin
+  comprobar nada**, sin aviso. Olvidarlo no rompe nada visible: sólo desarma en silencio la
+  única defensa de integridad del vehículo.
 - **`version` se declara**, y **la que manda es la de `plugin.json`, dentro del zip**, no la de
   la entrada del catálogo. Se declara y no se deja al digest porque la UI de `/plugin` hace
   `manifest.version ?? "unknown"`, y en la única pantalla donde el usuario juzga si se fía de
@@ -1017,28 +1027,30 @@ conversación.
 
 ### 11.2 Tres riesgos con nombre, y su plan B
 
-**(1) La cuarentena del zip. Se prueba PRIMERO, antes de escribir una línea de empaquetado.**
+**(1) La cuarentena del zip. CERRADA, y a favor.** Medida el 2026-09-03 contra un release
+alojado de verdad (`docs/research/15-la-cuarentena-medida-y-el-veredicto-del-vehiculo.md`).
 
-Es lo único que puede cambiar el vehículo de instalación y no sólo el código. Si el host marca
-`com.apple.quarantine` sobre lo que extrae del zip, **Gatekeeper mata un binario firmado ad-hoc
-y sin notarizar**.
+Era lo único que podía cambiar el vehículo de instalación y no sólo el código: si el host
+marcase `com.apple.quarantine` sobre lo que extrae del zip, **Gatekeeper mataría un binario
+firmado ad-hoc y sin notarizar**. No lo marca. El fichero extraído llega **sin cuarentena**, con
+modo **`100755`**, y **corre** (`rc=0`) —arrancado por el host a través del Lanzador, y antes de
+su `chmod +x`—, igual en la extracción que en la copia versionada de la caché.
 
-Lo que hay leído y a favor: el zip viaja como `arraybuffer` y **nunca toca el disco**, la
-extracción escribe ficheros nuevos con `fs.writeFile`, y `com.apple.quarantine` aparece una sola
-vez en los 289 MB del bundle del host, dentro de un documento sin relación. **Pero es lectura,
-no medición**: hay que mirar el atributo extendido sobre el fichero extraído *y en la copia
-versionada*, y **ejecutarlo de verdad**.
+> **El plan B no se compra.** Ni notarizar (99 $/año contra un ataque que no ocurre) ni volver al
+> binario dentro del repo del marketplace clonado, cuya factura de `B × (N + 2)` permanente sigue
+> siendo peor.
 
-> **Plan B:** notarizar (cuenta de Apple Developer, 99 $/año, `notarytool` + `staple` en CI), o
-> volver al binario dentro del repo del marketplace clonado — que está medido y funciona, con su
-> factura de `B × (N + 2)` permanente en el `.git` del usuario (200 MB en disco para un binario
-> de 40 MB tras una sola actualización).
+Dos lecturas del log que no hay que confundir con lo contrario de lo que dicen: **`spctl -a`
+responde `rejected`** —siempre lo hará sobre un ad-hoc sin notarizar— y el binario **corre
+igual**, porque sin cuarentena la ejecución no consulta a Gatekeeper; y **`com.apple.provenance`
+sí aparece** sobre todo lo instalado, pero no es la cuarentena y no impide nada.
 
-Las otras cuatro comprobaciones del vehículo **no condicionan el diseño** y se contestan con un
-release desechable delante: `source: "url"` sin git, el `archive` de punta a punta con digest
-cambiado y dónde acaba lo extraído, el modo real del fichero, y el `update` con `version`
-declarada. El arnés está escrito en
-`docs/research/prototipos/17-el-vehiculo-del-zip/run-hosted.sh` y sólo le falta el host.
+Las otras cuatro comprobaciones del vehículo, contestadas en la misma corrida: `source: "url"`
+por `https://raw.githubusercontent.com` **sin un solo fichero `.git`** en el
+`CLAUDE_CONFIG_DIR`; el digest cambiado a mano **rechaza en primer plano** con el esperado y el
+obtenido en el mensaje; el modo real es `100755`, así que el `chmod +x` del Lanzador es respaldo
+y no mecanismo; y el `update` con `version` declarada dentro del zip **trae la versión nueva**
+(`updated from 1.0.0 to 2.0.0`).
 
 **(2) La regla del nodo rastreable. Se mide ANTES de darla por buena.**
 
@@ -1083,7 +1095,8 @@ puede corregir**: el agente es ciego y el usuario no lee el fuente.
 
 ### 11.3 La checklist del primer día
 
-1. **La cuarentena del zip** (riesgo 1). Antes que cualquier otra cosa del empaquetado.
+1. ~~**La cuarentena del zip** (riesgo 1)~~. **Hecho el 2026-09-03**: no hay cuarentena y el
+   vehículo del §10.1 se queda como está. El empaquetado puede empezar.
 2. **La regla del nodo rastreable contra el banco de 63 casos** (riesgo 2). Antes de dar el
    Límite honesto por bueno.
 3. **El tamaño del universal binary.** Referencia: el binario suelto de mmdr son 6,9 MB sin
