@@ -14,16 +14,20 @@ que el agente está diciendo, no para guardar lo que el agente dibuja. Guarda N
 Vistas y el Visor enseña una cada vez, sin índice de las demás, así que el nombre
 inglés —provisional— acierta con la metáfora: un rotafolio es exactamente eso.
 Quién pasa la hoja es el agente, porque la Pizarra es su canal para explicarse; el
-usuario puede retroceder una hoja, y para cualquier otra cosa se lo pide. Ser su canal
-no la hace suya para abrirla: eso se pide una vez, ver Apertura pedida.
+usuario puede retroceder una hoja, y para cualquier otra cosa se lo pide. Abrirla, en
+cambio, no lo decide ninguno de los dos por su cuenta: medido, el agente no la ofrece
+nunca y no la usa hasta que se le pide o se le manda, ver Apertura pedida.
 _Avoid_: canvas (en español), lienzo, board, tablero; y como identificadores,
 `canvas`, `board` o `whiteboard`
 
 **Apertura pedida**:
-El único permiso que la Pizarra le pide al usuario: el primer show de la sesión —el que
-hace aparecer la ventana y le roba el foco— se ofrece y se espera el sí. Con la ventana
-ya abierta no se pide, se avisa, porque pasar la hoja no interrumpe a nadie. Es cortesía
-declarada, no mecanismo: nada en el protocolo distingue el show pedido del que no lo fue.
+El permiso que la Pizarra iba a pedirle al usuario antes del primer show de la sesión —el
+que hace aparecer la ventana y le roba el foco—. **Medido, no ocurre**: el agente anuncia
+y dibuja, y no espera ningún sí. Sobrevive sólo su otra mitad, que sí se cumple sola: con
+la ventana ya abierta no se pide, se avisa, porque pasar la hoja no interrumpe a nadie.
+Era cortesía declarada y no mecanismo —nada en el protocolo distingue el show pedido del
+que no lo fue— y eso es exactamente lo que la dejó sin cumplirse. Qué queda de ella está
+por decidir; el término se conserva porque nombra la decisión pendiente, no el producto.
 _Avoid_: permiso, consentimiento, opt-in, confirmación
 
 **Efímero**:
