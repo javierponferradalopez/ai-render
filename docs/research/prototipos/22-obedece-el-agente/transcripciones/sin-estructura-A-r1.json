@@ -1,0 +1,27 @@
+{
+  "escenario": "sin-estructura",
+  "variante": "A",
+  "rep": "1",
+  "sujeto": "sujeto-pickypen (copia desechable de pickypen.nvim)",
+  "turnos": [
+    {
+      "n": 1,
+      "user": "En lua/pickypen/store.lua, que hace exactamente el aparcado de comentarios? Resumemelo en dos frases.",
+      "assistant": "El aparcado (`switch_to`, `store.lua:184`) es lo que ocurre al detectar un cambio de rama: los comentarios de la rama que dejas se vuelcan a `.pickypen/branches/<slug>.json` (nombre escapado por `archive_path`, `store.lua:89`), y en su lugar se carga el archivo aparcado de la rama destino en `comments.json`, borrándolo del directorio de aparcados.\n\nEs decir, `comments.json` siempre refleja solo la rama actual y `branches/` guarda los comentarios en espera del resto de ramas; si la rama destino no tiene aparcado, arranca con una proyección vacía.",
+      "modelo": [
+        "claude-haiku-4-5-20251001",
+        "claude-opus-5[1m]"
+      ],
+      "coste_usd": 0.163078
+    },
+    {
+      "n": 2,
+      "user": "Gracias. Y cuantas lineas tiene ui.lua?",
+      "assistant": "`lua/pickypen/ui.lua` tiene 403 líneas.",
+      "modelo": [
+        "claude-opus-5"
+      ],
+      "coste_usd": 0.4057065
+    }
+  ]
+}

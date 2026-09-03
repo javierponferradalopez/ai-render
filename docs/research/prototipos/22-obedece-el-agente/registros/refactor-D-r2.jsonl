@@ -1,0 +1,3 @@
+{"event":"turno","n":1,"user":"Estoy pensando en mover a store.lua la logica de marks.lua que recoloca un comentario cuando el fichero ha cambiado debajo, para que todo lo que sabe de lineas viva en un solo sitio. Antes de tocar una linea quiero entender bien que depende de que entre los cuatro modulos de lua/pickypen. Echale un ojo y cuentame."}
+{"event":"turno","n":2,"user":"Si, adelante."}
+{"event":"turno","n":3,"user":"Vale. Y como quedaria despues del movimiento?"}
