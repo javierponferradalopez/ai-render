@@ -87,7 +87,10 @@ _Avoid_: usar la palabra a secas
 La frontera que la pizarra no cruza dibujando: pasado ese punto no dibuja peor,
 se para y lo dice. Cubre el tamaño de Vista que ya no se lee, y también el
 significado que no se sostiene — dibujar una relación que no existe es peor que
-no dibujar nada.
+no dibujar nada. De ahí sale por dónde pasa: **lo que se ve de más se rechaza; lo
+que se ve de menos se dibuja y se avisa**. Y es nuestra, no del idioma ni de quien
+dibuja: la sostienen las reglas que miramos sobre lo ya parseado —el Nodo fantasma
+y el Nodo apócrifo—, medida que fue la del renderer y resultó no sostener nada.
 _Avoid_: límite a secas, truncado, degradación
 
 **Nodo fantasma**:
@@ -96,8 +99,18 @@ mientras los demás del mismo diagrama sí traen etiqueta o cuerpo. Lo que enga�
 la asimetría: sale vacío al lado de uno lleno, así que no se lee como el error que
 es sino como algo de lo que se sabe menos. Un diagrama entero de ids desnudos no
 tiene fantasmas —no promete nada que no cumpla—, y el Límite honesto existe para
-rechazar los que sí lo son.
+rechazar los que sí lo son. Es una de las dos causas del mismo rechazo, y la que se
+delata sola; la otra es el Nodo apócrifo.
 _Avoid_: nodo implícito, auto-creación, typo
+
+**Nodo apócrifo**:
+El nodo cuyo id no está en ninguna parte del diagrama que escribió el agente: lo
+fabrica quien parsea al rendirse con una línea que no supo clasificar, y se lo
+atribuye a quien no lo escribió. Es el hermano del Nodo fantasma y el peor de los
+dos, porque **trae etiqueta**: el fantasma se ve por lo que le falta, y a éste no le
+falta nada. Los dos se rechazan igual y se cuentan juntos, pero no piden lo mismo —
+el fantasma se arregla declarando el id, el apócrifo reescribiendo la línea.
+_Avoid_: nodo por descarte, nodo inventado, alucinación, basura
 
 ### Las piezas vivas
 
