@@ -1,0 +1,149 @@
+############ 0. publicar el material
+GraphQL: Name already exists on this account (createRepository)
+  raw sirve 'catalogo de la sonda' tras 0s
+catalogo en https://raw.githubusercontent.com/javierponferradalopez/flipchart-archive-probe/main/marketplace.json
+https://github.com/javierponferradalopez/flipchart-archive-probe/releases/tag/v1.0.0
+  asset servible tras 0s: flipchart-1.0.0.zip
+Adding marketplace…Downloading marketplace from https://raw.githubusercontent.com/javierponferradalopez/flipchart-archive-probe/main/marketplace.json
+Validating marketplace data
+Saving marketplace to cache
+Cleaning up old marketplace cache…
+✔ Successfully added marketplace: flipchart-probe (declared in user settings)
+
+############ 1. LA CUARENTENA - la condicion de viabilidad
+Installing plugin "flipchart@flipchart-probe"...✔ Successfully installed plugin: flipchart@flipchart-probe (scope: user)
+
+real	0m17.290s
+user	0m0.854s
+sys	0m0.639s
+binario extraido: /Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart
+  modo:        -rwxr-xr-x 100755
+  bytes:       42076400
+  sha256:      75f30d80338b9c1f2683334d9f969397639dbdf7e1df38d50bfbb8ffcd78f87f
+  xattr -l:    [com.apple.provenance:  ]  <- vacio = sin cuarentena
+  cuarentena:  NINGUNA
+  ejecuta?     flipchart-probe: alive, blob[0]=182
+  rc=0
+  gatekeeper:  
+/Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart: rejected
+  codesign:    
+Format=Mach-O thin (arm64)
+Signature=adhoc
+y sobre todo lo que la cache versionada guarda, no solo la extraccion:
+  drwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe
+  drwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe/flipchart
+  -rwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart
+  -rw-r--r--  xattr=[com.apple.provenance ]  /plugins/marketplaces/flipchart-probe
+
+############ 2. el binario, arrancado POR EL HOST y no por nosotros
+t0=1788437803.456 exited_early=None rc=0 wall=30.30
+2026-09-03T12:16:43.614Z [DEBUG] Checking plugin flipchart: skillsPath=none, skillsPaths=0 paths
+2026-09-03T12:16:43.680Z [DEBUG] MCP server "plugin:flipchart:flipchart": Starting connection with timeout of 30000ms
+2026-09-03T12:16:43.686Z [DEBUG] Keeping /Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart: it still holds a directory, a symlink, a versioned archive or an entry of unknown type
+2026-09-03T12:16:43.686Z [DEBUG] Keeping /Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe: it still holds a directory, a symlink, a versioned archive or an entry of unknown type
+2026-09-03T12:17:13.682Z [DEBUG] MCP server "plugin:flipchart:flipchart": Connection timeout triggered after 30003ms (limit: 30000ms)
+2026-09-03T12:17:13.690Z [DEBUG] MCP server "plugin:flipchart:flipchart": Connection failed after 30009ms (CONNECT_TIMEOUT): MCP server "plugin:flipchart:flipchart" connection timed out after 30000ms
+2026-09-03T12:17:13.690Z [ERROR] MCP server "plugin:flipchart:flipchart" Connection failed (CONNECT_TIMEOUT): MCP server "plugin:flipchart:flipchart" connection timed out after 30000ms
+lo que vio el lanzador:
+{
+  "plugin_root": "/Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart/1.0.0",
+  "plugin_data": "/Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/data/flipchart-flipchart-probe",
+  "bin": "/Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart",
+  "size": 42076400,
+  "mode_before_chmod": "-rwxr-xr-x 100755",
+  "exec_bit_before_chmod": "yes",
+  "xattrs": "com.apple.provenance,",
+  "quarantine": "NONE",
+  "run_before_chmod_rc": 0,
+  "run_before_chmod_out": "flipchart-probe: alive, blob[0]=182",
+  "mode_after_chmod": "-rwxr-xr-x 100755",
+  "run_after_chmod_rc": 0,
+  "run_after_chmod_out": "flipchart-probe: alive, blob[0]=182"
+}
+
+############ 3. el digest que no casa
+Installing plugin "digest-malo@flipchart-probe"...✘ Failed to install plugin "digest-malo@flipchart-probe": Plugin archive integrity check failed for https://github.com/javierponferradalopez/flipchart-archive-probe/releases/download/v1.0.0/flipchart-1.0.0.zip: expected sha256 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, got 6501c7b19f40f86ad3f2592dcce71bc2ba385ba6529de6abab0b32424ab8714b. The archive was not installed. Verify the sha256 in the marketplace entry, or that the URL serves the intended file.
+
+y sin sha256 declarado:
+Installing plugin "sin-declarar@flipchart-probe"...✔ Successfully installed plugin: sin-declarar@flipchart-probe (scope: user)
+
+############ 4. las formas del zip
+---- envuelto
+Installing plugin "envuelto@flipchart-probe"...✔ Successfully installed plugin: envuelto@flipchart-probe (scope: user)
+---- con-finder
+Installing plugin "con-finder@flipchart-probe"...✔ Successfully installed plugin: con-finder@flipchart-probe (scope: user)
+---- solo-basura
+Installing plugin "solo-basura@flipchart-probe"...✘ Failed to install plugin "solo-basura@flipchart-probe": Plugin archive from https://github.com/javierponferradalopez/flipchart-archive-probe/releases/download/v1.0.0/t-empty.zip contained no plugin files. The archive was not installed. Verify the URL serves a zip of the plugin contents.
+
+---- sin-forma
+Installing plugin "sin-forma@flipchart-probe"...✘ Failed to install plugin "sin-forma@flipchart-probe": Plugin archive from https://github.com/javierponferradalopez/flipchart-archive-probe/releases/download/v1.0.0/t-noplugin.zip has no plugin content at its root (expected .claude-plugin/ or a commands/, skills/, agents/, hooks/, themes/, output-styles/, monitors/, workflows/, SKILL.md, .mcp.json, or .lsp.json at the top level, optionally inside a single wrapper directory). The archive was not installed.
+
+
+############ 5. queda git por alguna parte?
+ficheros .git* en el CLAUDE_CONFIG_DIR: NINGUNO
+el catalogo en disco:
+$CFG/plugins/marketplaces
+$CFG/plugins/marketplaces/flipchart-probe
+  modo=-rw-r--r-- bytes=2717
+el config dir entero ocupa:  80M  (con el binario de 42 MB dentro)
+
+############ 6. /plugin update con la disciplina de #23
+-- a) misma version, mismo digest: no deberia haber nada que hacer
+Checking for updates for plugin "flipchart" at user scope…
+✔ flipchart is already at the latest version (1.0.0).
+
+-- b) SOLO el digest cambia (misma version declarada dentro del zip)
+  asset servible tras 0s: flipchart-1.0.0b.zip
+  raw sirve 'el parche sin bump' tras 180s
+Saving marketplace to cache
+✔ Successfully updated marketplace: flipchart-probe
+Checking for updates for plugin "flipchart" at user scope…
+✔ flipchart is already at the latest version (1.0.0).
+
+real	0m4.143s
+user	0m0.675s
+sys	0m0.265s
+   el zip nuevo trae PARCHE.md; llego al disco?
+   -> vacio = el host lo bajo entero y lo tiro
+
+-- c) bump completo: version dentro del zip, y version + url + sha256 en la entrada
+a release with the same tag name already exists: v2.0.0
+  asset servible tras 0s: flipchart-2.0.0.zip
+  raw sirve 'el bump completo' tras 275s
+Saving marketplace to cache
+✔ Successfully updated marketplace: flipchart-probe
+Checking for updates for plugin "flipchart" at user scope…
+✔ Plugin "flipchart" updated from 1.0.0 to 2.0.0 for scope user. Restart to apply changes.
+   la cache versionada tras el update:
+     1.0.0
+     2.0.0
+binario extraido: /Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart
+  modo:        -rwxr-xr-x 100755
+  bytes:       42076400
+  sha256:      75f30d80338b9c1f2683334d9f969397639dbdf7e1df38d50bfbb8ffcd78f87f
+  xattr -l:    [com.apple.provenance:  ]  <- vacio = sin cuarentena
+  cuarentena:  NINGUNA
+  ejecuta?     flipchart-probe: alive, blob[0]=182
+  rc=0
+  gatekeeper:  
+/Users/javierponferradalopez/Documents/projects/ai-render/docs/research/prototipos/17-el-vehiculo-del-zip/out/cfg-hosted/plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart: rejected
+  codesign:    
+Format=Mach-O thin (arm64)
+Signature=adhoc
+y sobre todo lo que la cache versionada guarda, no solo la extraccion:
+  drwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe
+  drwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe/flipchart
+  -rwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe/flipchart/1.0.0/bin/flipchart
+  -rwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe/flipchart/2.0.0/bin/flipchart
+  -rwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/cache/flipchart-probe/sin-declarar/1.0.0/bin/flipchart
+  drwxr-xr-x  xattr=[com.apple.provenance ]  /plugins/data/flipchart-flipchart-probe
+  -rw-r--r--  xattr=[com.apple.provenance ]  /plugins/marketplaces/flipchart-probe
+
+############ 7. los numeros
+  flipchart-1.0.0.zip: 42052543 bytes  sha256=6501c7b19f40f86ad3f2592dcce71bc2ba385ba6529de6abab0b32424ab8714b
+  flipchart-1.0.0b.zip: 42052670 bytes  sha256=dfc4e6e42d521bc306aa90c4cf6f79c27c05d4d78fc59312b6872c6694b8c972
+  flipchart-2.0.0.zip: 42052543 bytes  sha256=4980d6abe005b0ef267c16565dd1c12157e4a68ac611ffd5c6f6539c0006395e
+  tope del host: 268435456 bytes (256 MiB), plazo 120000 ms sin valvula
+  el CLAUDE_CONFIG_DIR entero: 120M
+
+
