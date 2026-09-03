@@ -155,4 +155,9 @@ aparece en su lugar, sobre los 17 diagramas intentados:
 | Familia no medida (`sequenceDiagram`) | 4 / 17 |
 | `direction` dentro de `subgraph` | 0 / 17 |
 
-El detector de Nodo fantasma de `analiza.mjs` quedó sin estrenar por lo mismo.
+**Cerrado después, en [#30](https://github.com/javierponferradalopez/ai-render/issues/30).**
+El detector de `analiza.mjs` quedó sin estrenar porque lee `registros`, y ahí no hay ningún
+`show`. Pero los 17 diagramas sí están, dentro del `tool_use` del historial: pasados por el
+mismo detector con [`asimetria.mjs`](asimetria.mjs) dan **0/17 con Nodo fantasma y 0 ids
+desnudos**. El agente no deja ids sin etiquetar nunca — su pulsión es la contraria, adornar
+la etiqueta.
