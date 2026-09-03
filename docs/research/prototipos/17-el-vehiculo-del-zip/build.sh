@@ -54,7 +54,23 @@ mkdir -p "$T/e/__MACOSX"; printf 'y' > "$T/e/__MACOSX/._x"; printf 'x' > "$T/e/.
 mkdir -p "$T/n"; echo hola > "$T/n/cualquier-cosa.txt"
 ( cd "$T/n" && zip -q -r -X "$OUT/zips/t-noplugin.zip" . )
 
+echo "== 5. el material del update: los dos casos que separan digest de version"
+# a) mismo `version` dentro del plugin.json, bytes distintos -> otro sha256.
+#    Es el arreglo publicado sin bump: el host baja el zip y deberia tirarlo.
+rm -rf "$OUT/plugin-b"; cp -R "$OUT/plugin" "$OUT/plugin-b"
+printf 'republicado sin subir la version\n' > "$OUT/plugin-b/PARCHE.md"
+( cd "$OUT/plugin-b" && zip -q -r -X "$OUT/zips/flipchart-1.0.0b.zip" . )
+
+# b) bump completo: el `version` que manda es el de dentro del zip.
+rm -rf "$OUT/plugin2"; cp -R "$OUT/plugin" "$OUT/plugin2"
+sed -i '' 's/"version": "1.0.0"/"version": "2.0.0"/' \
+  "$OUT/plugin2/.claude-plugin/plugin.json"
+( cd "$OUT/plugin2" && zip -q -r -X "$OUT/zips/flipchart-2.0.0.zip" . )
+
 ls -l "$OUT/zips"
+for z in flipchart-1.0.0.zip flipchart-1.0.0b.zip flipchart-2.0.0.zip; do
+  shasum -a 256 "$OUT/zips/$z"
+done
 echo
 echo "Listo. El material esta en $OUT."
 echo "La mitad local se corre con ./run-local.sh; la alojada, con ./run-hosted.sh."
