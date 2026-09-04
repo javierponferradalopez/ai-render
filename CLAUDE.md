@@ -21,6 +21,10 @@ Un solo crate binario `flipchart` en la raíz. La toolchain está pinchada en
 | `make test` | `cargo test` |
 | `make build` | `cargo build --release` |
 
+`flipchart check <diagram.mmd>...` corre la tubería sobre ficheros `.mmd` e
+imprime el desenlace y el texto que recibiría el agente, **sin abrir ventana**.
+Es el instrumento con el que se mide el Límite honesto.
+
 Los lints viven en `[lints]` de `Cargo.toml`, no en banderas sueltas, para que
 apliquen igual desde el editor. Dos importan más que el resto: `unused` en `deny`
 —andamiaje que nadie lee es un error, no un aviso— y `clippy::print_stdout`,
