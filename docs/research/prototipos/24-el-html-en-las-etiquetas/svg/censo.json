@@ -1,0 +1,905 @@
+[
+  {
+    "caso": "cd-01-br-en-relacion",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"Pedido\", to: \"Venta\", label: Some(\"hereda<br/>de\"), start_label: None, end_label: None, directed: true, arrow_start: true, arrow_end: false, arrow_start_kind: Some(OpenTriangle), arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "Venta",
+          "label": "Venta",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 3428
+  },
+  {
+    "caso": "cd-02-negrita-en-relacion",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"Pedido\", to: \"Venta\", label: Some(\"<b>hereda</b>\"), start_label: None, end_label: None, directed: true, arrow_start: true, arrow_end: false, arrow_start_kind: Some(OpenTriangle), arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "Venta",
+          "label": "Venta",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 3408
+  },
+  {
+    "caso": "cd-03-br-en-miembro",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido\n---\n+confirmar() : void\n+anular() : <br/>void",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2635
+  },
+  {
+    "caso": "cd-04-negrita-en-miembro",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido\n---\n+<b>confirmar</b>() : void",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2608
+  },
+  {
+    "caso": "cd-05-cursiva-span-en-miembro",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido\n---\n+<i>confirmar</i>() : void\n+<span style='color:red'>anular</span>() : void",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2760
+  },
+  {
+    "caso": "cd-06-entidades-en-miembro",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido\n---\n+confirmar() : Pedido&amp;Venta\n+anular() : &lt;void&gt;",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2667
+  },
+  {
+    "caso": "cd-07-almohadilla-en-miembro",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "Pedido\n---\n+confirmar(#quot;firme#quot;) : void",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2606
+  },
+  {
+    "caso": "cd-08-anotacion-y-br",
+    "direccion_impuesta": true,
+    "direccion_parseada": "TB",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"Pedido\", to: \"Venta\", label: Some(\"<b>implementa</b>\"), start_label: None, end_label: None, directed: true, arrow_start: true, arrow_end: false, arrow_start_kind: Some(OpenTriangle), arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Class",
+      "nodes": [
+        {
+          "id": "Pedido",
+          "label": "<<interface>>\nPedido\n---\n+confirmar() : <br/>void",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "Venta",
+          "label": "Venta\n---\n+cerrar() : void",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 4255
+  },
+  {
+    "caso": "fc-01-br-cerrado",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua<br/>recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua<br/>persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2026
+  },
+  {
+    "caso": "fc-02-br-abierto",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua<br>recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua<br>persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2026
+  },
+  {
+    "caso": "fc-03-br-con-espacio",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua<br />persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1952
+  },
+  {
+    "caso": "fc-04-negrita",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<b>recolocacion</b>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1949
+  },
+  {
+    "caso": "fc-05-cursiva",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<i>recolocacion</i>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1949
+  },
+  {
+    "caso": "fc-06-strong-em",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<em>recolocacion</em>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "<strong>storelua</strong>",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1979
+  },
+  {
+    "caso": "fc-07-span-estilo",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<span style='color:red'>recolocacion</span>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2020
+  },
+  {
+    "caso": "fc-08-enlace",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<a href='https://ejemplo'>recolocacion</a>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2022
+  },
+  {
+    "caso": "fc-09-codigo-subrayado",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<code>recolocacion</code>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "<u>storelua</u>",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1973
+  },
+  {
+    "caso": "fc-10-imagen",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "<img src='x.png'/>recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2004
+  },
+  {
+    "caso": "fc-11-entidad-amp",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua &amp; marks",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1948
+  },
+  {
+    "caso": "fc-12-entidad-nbsp-lt",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "&lt;recolocacion&gt;",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua&nbsp;persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1967
+  },
+  {
+    "caso": "fc-13-entidad-numerica",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua &#35; persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1989
+  },
+  {
+    "caso": "fc-14-almohadilla-mermaid",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "recolocacion #35; uno",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua #quot;persistencia#quot;",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2003
+  },
+  {
+    "caso": "fc-15-ampersand-crudo",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua & persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1951
+  },
+  {
+    "caso": "fc-16-menor-que-crudo",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua < persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1950
+  },
+  {
+    "caso": "fc-17-comilla-simple",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "recolocacion",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "el 'storelua' de siempre",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 1958
+  },
+  {
+    "caso": "fc-18-br-en-arista",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: Some(\"\\\"lee<br/>escribe\\\"\"), start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2541
+  },
+  {
+    "caso": "fc-19-negrita-en-arista",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: Some(\"\\\"<b>lee</b>\\\"\"), start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2511
+  },
+  {
+    "caso": "fc-20-br-en-subgrafo",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": [
+        {
+          "direction": null,
+          "id": "capa",
+          "label": "Capa<br/>de datos",
+          "nodes": [
+            "store"
+          ]
+        }
+      ]
+    },
+    "parse": "Ok",
+    "svg_bytes": 2361
+  },
+  {
+    "caso": "fc-21-negrita-en-subgrafo",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "markslua",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "storelua",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": [
+        {
+          "direction": null,
+          "id": "capa",
+          "label": "<b>Capa</b> de datos",
+          "nodes": [
+            "store"
+          ]
+        }
+      ]
+    },
+    "parse": "Ok",
+    "svg_bytes": 2336
+  },
+  {
+    "caso": "mix-01-espontaneo",
+    "direccion_impuesta": true,
+    "direccion_parseada": "LR",
+    "estilo_vaciado": [],
+    "grafo": {
+      "direction": "LR",
+      "edges": [
+        {
+          "raw": "Edge { from: \"store\", to: \"marks\", label: None, start_label: None, end_label: None, directed: true, arrow_start: false, arrow_end: true, arrow_start_kind: None, arrow_end_kind: None, start_decoration: None, end_decoration: None, style: Solid }"
+        }
+      ],
+      "kind": "Flowchart",
+      "nodes": [
+        {
+          "id": "marks",
+          "label": "marks.lua<br/><b>recolocacion</b>",
+          "shape": "Rectangle"
+        },
+        {
+          "id": "store",
+          "label": "store.lua<br/>persistencia",
+          "shape": "Rectangle"
+        }
+      ],
+      "side_channels": {},
+      "subgraphs": []
+    },
+    "parse": "Ok",
+    "svg_bytes": 2044
+  }
+]

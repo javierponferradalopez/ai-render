@@ -1,0 +1,9 @@
+classDiagram
+    class Pedido {
+        <<interface>>
+        +confirmar()<br/>void
+    }
+    class Venta {
+        +cerrar() void
+    }
+    Pedido <|-- Venta : <b>implementa</b>
