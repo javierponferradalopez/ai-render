@@ -867,8 +867,8 @@ Dato que conviene tener presente: el agente elige familias no medidas por su cue
 servidor MCP por stdio corriente —gratis por construcción— pero **no se documenta, no se
 prueba y no se soporta** fuera de Claude Code.
 
-**La caja lleva `.mcp.json` y el binario, y nada más:** sin `skills/`, sin `commands/`, sin
-`hooks/`. Un skill de peaje cero es exactamente el que el modelo **no** puede invocar, así que
+**La caja lleva cuatro ficheros —el manifiesto, el `.mcp.json`, el Lanzador y el binario— y
+nada más:** sin `skills/`, sin `commands/`, sin `hooks/`. Un skill de peaje cero es exactamente el que el modelo **no** puede invocar, así que
 no puede ser dueño de nada; y un `/flipchart:*` en el menú es superficie de producto que
 promete un mando sobre la pizarra que el usuario no tiene.
 
@@ -892,7 +892,8 @@ rechazo por digest con el esperado y el obtenido dentro del mensaje.
 
 **El pico en disco es `2 × B`, no `B`:** medido, el `update` deja las dos versiones en la caché
 —`…/flipchart/1.0.0` y `…/flipchart/2.0.0`, los dos binarios enteros— hasta que la poda pase.
-Con un universal de ~84 MB eso son ~168 MB entre la actualización y la recogida.
+Con los **49,2 MB** medidos del universal eso son **~98 MB** entre la actualización y la
+recogida; el zip no cuenta, porque viaja como `arraybuffer` y nunca toca el disco.
 
 Topes medidos, y hay que respetarlos porque no todos tienen válvula:
 
@@ -909,7 +910,9 @@ local para probar esto: hay que alojar de verdad.**
 
 ### 10.2 La forma del zip, y el versionado
 
-Dentro del zip: **`.claude-plugin/plugin.json`, `.mcp.json`, el Lanzador y el binario.**
+Dentro del zip: **`.claude-plugin/plugin.json`, `.mcp.json`, el Lanzador y el binario.** Los
+dos JSON están versionados en `publicacion/caja/`; el Lanzador es el `launcher.sh` de la raíz,
+el mismo que corren los tests.
 
 - **Se empaqueta con Info-ZIP** (`zip`), que produce `version made by == 3` (Unix) con los
   modos `0755` intactos. **El `zip` de la CI es parte del contrato**: el host lee los atributos
@@ -938,13 +941,25 @@ responde 200 sin redirección.
 
 1. Compilar arm64 y x86_64.
 2. `lipo` para el universal binary.
-3. **Re-firmar ad-hoc** (`codesign -s -`) y verificar que la firma sobrevive al `lipo`: en
-   Apple Silicon todo ejecutable necesita al menos firma ad-hoc para correr, Rust la genera al
-   compilar, pero el universal se fabrica después. **Sin notarización** (ver §11.2).
+3. **Re-firmar ad-hoc** (`codesign -s -`) y verificar con **`codesign --verify`**, más un
+   `codesign -dv --arch` por arquitectura. En Apple Silicon todo ejecutable necesita al menos
+   firma ad-hoc para correr; Rust la genera al compilar, pero **sólo en la mitad nativa** —la
+   `x86_64` cruzada sale sin firmar— y el `lipo` conserva la asimetría. Medido, `codesign -dv`
+   a secas sobre ese universal contesta `Signature=adhoc` porque lee la rebanada nativa, y el
+   binario corre en el Mac que lo fabricó: **el defecto es invisible donde se compila y sólo
+   muerde en los Mac Intel.** `-dv` sobre el fichero no vale como verificación.
+   **Sin notarización** (ver §11.2).
 4. Empaquetar con Info-ZIP.
 5. Calcular el `sha256`.
 6. Generar el `marketplace.json` desde el tag, subir el zip como asset del release y commitear
    el JSON en `main`.
+
+Los seis pasos viven en `.github/workflows/publicacion.yml`, disparados por el tag y por nada
+más. Los dos que tienen reglas propias son guiones aparte, y por eso se pueden probar sin
+publicar nada: `publicacion/empaqueta.sh` monta la caja y la cierra —copia los cuatro ficheros
+uno a uno, así que no hay por dónde meter un quinto— y `publicacion/catalogo.sh` genera el
+catálogo desde el tag. Los dos **se niegan** si la versión del tag no es la que declara el
+manifiesto que van a publicar; `tests/caja.rs` es lo que lo tiene medido en cada `make verify`.
 
 **Nunca documentar «bájate el zip a mano»**: quien descarga con un navegador o Mail se lleva
 `com.apple.quarantine`, y ese es el caso que Gatekeeper mata.
@@ -1219,10 +1234,15 @@ y el aviso ya cierra el agujero sin tocar el peaje de cada llamada.
    los seis inventos (§4.1, y `docs/research/16-el-nodo-rastreable-medido.md` §9).
 3. ~~**El HTML en las etiquetas** (riesgo 3)~~. **Hecho el 2026-09-04**: `<br>` conviven sin
    aviso y todo lo demás enciende el cuarto aviso del §4.4. La Vista siempre se dibuja.
-4. **El tamaño del universal binary.** Referencia: el binario suelto de mmdr son 6,9 MB sin
-   runtime, y falta `eframe` + `winit` + `resvg` + `rmcp` encima, en dos arquitecturas. Con el
-   tope de 256 MiB y el caudal medido hay margen de sobra, pero conviene tener el número real
-   antes de escribir el `marketplace.json`.
+4. ~~**El tamaño del universal binary**~~. **Hecho el 2026-09-04**: el universal firmado son
+   **49,2 MB** y el zip que se publica **18,7 MB**, con márgenes de 14× en tamaño y ~165× en
+   plazo (`docs/research/19-el-universal-binary-medido.md`). De propina, el hallazgo que no se
+   buscaba: **Rust firma ad-hoc sólo la mitad nativa**, el `lipo` conserva la asimetría y
+   `codesign -dv` da el fichero por firmado leyendo esa mitad. La verificación es `--verify`
+   (§10.3).
+
+**La checklist está cerrada.** Lo que le queda al empaquetado no es una pregunta abierta sino
+un release publicado de verdad.
 
 ### 11.4 Límites conocidos, escritos para que no se descubran
 
