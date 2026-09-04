@@ -113,6 +113,19 @@ falta nada. Los dos se rechazan igual y se cuentan juntos, pero no piden lo mism
 el fantasma se arregla declarando el id, el apócrifo reescribiendo la línea.
 _Avoid_: nodo por descarte, nodo inventado, alucinación, basura
 
+**Marcado literal**:
+El marcado que el agente escribe dentro del texto de una etiqueta y que llega al
+dibujo tal como lo escribió: `<b>recolocacion</b>` en la caja, con los picos
+puestos. Es la cuarta cosa de la que la Pizarra avisa, y la única que no viaja en
+un campo del IR sino dentro de la etiqueta, así que el vaciado del estilo no lo
+toca. Su frontera no es una política nuestra sino lo que mmdr sabe interpretar, y
+eso son exactamente dos cadenas —`<br>` y `<br/>`—: ésas conviven sin aviso porque
+hacen lo que el agente quería, y todo lo demás con forma de marcado —etiquetas,
+entidades `&…;` y escapes `#…;`— se dibuja y se avisa. Se avisa y no se rechaza
+porque es ver de más **una palabra**, no un nodo: la estructura no miente, y tirar
+el dibujo entero cobraría la explicación por un defecto de texto.
+_Avoid_: HTML a secas, basura, marcado sin más
+
 ### Las piezas vivas
 
 **Servidor MCP**:

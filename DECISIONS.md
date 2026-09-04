@@ -197,6 +197,11 @@ Dos canales de estilo **se pierden callando** porque no dejan nada que mirar: `c
 `link` de `classDiagram` se descartan al parsear y no aterrizan en ningún campo. Coste
 conocido y aceptado.
 
+Y hay una tercera vía de pedir píxeles que **el vaciado no puede tapar por construcción**: el
+marcado que viaja **dentro del texto de la etiqueta** (`<b>`, `&amp;`, `#quot;`), que no
+aterriza en ningún campo porque es parte de la etiqueta. Ésa la coge el cuarto aviso del §4.4,
+y no aquí.
+
 ### 3.3 La dirección: se impone, y se avisa
 
 **`graph.direction = Direction::LeftRight`, impuesta tras el parse, sólo en `flowchart` y
@@ -433,9 +438,9 @@ View "propuesto" is unchanged. This is a bug in the flipchart, not in your diagr
 try a simpler diagram, or the same one with fewer nodes.
 ```
 
-### 4.4 Los tres avisos, que no son rechazos
+### 4.4 Los cuatro avisos, que no son rechazos
 
-La Vista **se dibuja** y se avisa, con `isError: false`. Los tres son **literales fijos**, así
+La Vista **se dibuja** y se avisa, con `isError: false`. Los cuatro son **literales fijos**, así
 que su coste es predecible, y son acumulables. Regla común: **se avisa por lo que venía, no
 por lo que tuvo efecto** — un `classDef` que ninguna clase usaba también avisa, porque el
 agente creyó que estaba pintando.
@@ -474,6 +479,36 @@ Redacción de referencia, no medida:
 Note: the flipchart lays diagrams out left to right; the direction in your source was ignored.
 The view was drawn.
 ```
+
+**(d) Marcado literal** — el marcado que el agente escribe **dentro** de la etiqueta y que
+llega al dibujo como texto. Dice lo mismo que (b) —no sabemos dibujarlo— sobre lo único que el
+vaciado del §3.2 no puede tocar, porque viaja en el texto y no en un campo. **39 tokens**,
+contados con `peaje-30.py`:
+
+```
+Note: only <br> is rendered inside labels; other tags, HTML entities and #-escapes reached
+the drawing as literal text. The view was drawn — write those labels as plain text.
+```
+
+Es el aviso más caro de los cuatro y el que más compra, porque es **el único canal que existe
+para arreglar esta basura**: el agente es ciego y el usuario no lee el fuente, así que sin él
+`<b>recolocacion</b>` se queda en la caja para siempre. Medido, se paga en 5 de 17 diagramas
+espontáneos.
+
+Nombra `<br>` a propósito, y ésa es la decisión del constructo: **`<br>` y `<br/>` se
+interpretan** —parten la etiqueta, que es exactamente lo que el agente quería— y por eso son
+convivencia **sin aviso**; todo lo demás con forma de marcado sale literal. La frontera es de
+la implementación de mmdr, no de una política nuestra: `<br />` con espacio dentro, `<br  />`
+y `<BR/>` ya salen literales, así que el aviso salta también con ellos.
+
+Se pregunta a **las etiquetas del `Graph`**, no al fuente —igual que las reglas del §4.1—,
+que es donde ya no queda sintaxis de Mermaid que confundir con marcado: el `&` de `A & B` no
+es una entidad y `-->` no es una etiqueta. Tres formas cuentan como marcado: una etiqueta
+`<nombre …>` que no sea `<br>`, una entidad `&…;` y un escape `#…;` de los de Mermaid. Y dos
+que se le parecen **no** cuentan: `<<interface>>`, que mmdr dibuja bien y es lo más idiomático
+que tiene un diagrama de clases, y `Map<String,Int>`, donde la coma delata que no hay nombre
+de etiqueta. Sobre el banco de 63 más las familias y las sondas —74 casos—, **el aviso salta
+en uno, y ese uno lleva `<b>`**.
 
 **Un rechazo nunca lleva avisos.** Si no se dibujó nada, contarle además que le tiramos los
 colores es ruido sobre algo que va a reescribir entero.
@@ -1111,23 +1146,41 @@ la de la asimetría y hay que ver cuál salta primero).
 > **Plan B:** si la regla se cae, lo que vuelve a estar abierto es **qué se hace con los seis
 > inventos**, no el reparto entero de §4.
 
-**(3) El HTML en las etiquetas. Medido y sin desenlace.**
+**(3) El HTML en las etiquetas. CERRADA, y a aviso.** Decidida el 2026-09-04 con el dibujo
+delante (`docs/research/17-el-html-en-las-etiquetas.md`, banco en el prototipo 24).
 
-Aparece en **15 de 17** diagramas espontáneos, así que no es un caso raro: es lo normal. Y no lo
-tapa nada de §3.2, porque **viaja dentro del texto de la etiqueta**, no en un campo:
+**No son dos casos, es uno con una excepción, y la excepción es la frecuente.** Barridos
+treinta casos en `flowchart` y `classDiagram`, mmdr interpreta **exactamente dos** cadenas
+—`<br>` y `<br/>`— y dibuja como texto literal todo lo demás que no sea texto: el resto de
+etiquetas (`<b>`, `<i>`, `<em>`, `<strong>`, `<u>`, `<code>`, `<span>`, `<a>`, `<img>`), las
+entidades (`&amp;`, `&nbsp;`, `&lt;`, `&#35;`), los escapes propios de Mermaid (`#quot;`,
+`#35;`) y **hasta `<br />` con un espacio dentro, `<br  />` y `<BR/>`**.
 
-| Constructo | Qué hace mmdr | Qué acaba viendo el usuario |
+| Constructo | Qué hace mmdr | Desenlace |
 |---|---|---|
-| `<br/>` | **lo interpreta** — parte la etiqueta en dos `<text>` | exactamente lo que el agente quería |
-| `<b>…</b>` | **lo escapa** | `<b>recolocacion</b>` literal dentro de la caja |
+| `<br>`, `<br/>` | **lo interpreta** — parte la etiqueta | **convivencia sin aviso**: es lo que el agente quería |
+| todo lo demás | **lo escapa** | **aviso (d) del §4.4**, y la Vista se dibuja |
 
-Ninguno de los dos enciende el aviso ni el rechazo. Y el `<b>` produce **basura visible que nadie
-puede corregir**: el agente es ciego y el usuario no lee el fuente.
+**Por qué aviso y no rechazo.** El rechazo no cabía en la tabla del §4.3 sin ser un sexto
+desenlace, y sobre todo **cobra la estructura entera por un defecto de texto**: tirar un
+diagrama de dependencias bien escrito porque una caja dice `<b>` cambia ver una palabra fea
+por no ver nada — y el agente, medido, ante un tropiezo no insiste, se pasa a prosa y no lo
+dice (§8.1, §5.3). El reparto del §4 aguanta la decisión: esto es **ver de más una palabra**,
+no ver de más un nodo, y el usuario no se lo cree como contenido; nada de la estructura miente.
 
-> **No hay plan B porque no hay decisión que revertir.** Las tres salidas siguen sobre la mesa
-> —rechazo, aviso o convivencia— y se decide **con el dibujo delante**. Dato para la balanza: la
-> descripción de las herramientas cubre hoy un fallo que no ocurre (0/17) e ignora éste, que
-> ocurre en 15/17.
+**Por qué aviso y no convivencia.** Porque es el **único canal que existe** para arreglarlo. El
+agente es ciego, el usuario no lee el fuente, y sin decírselo `<b>recolocacion</b>` se queda en
+la caja para siempre. Con el aviso, la basura permanente pasa a ser basura de un turno.
+
+**El reparto es por constructo, no en bloque**, que es lo que exigía el ticket: `<br>` sale bien
+y por eso no se cobra nada por él —rechazarlo o avisarlo sería cobrar por algo que funciona—.
+
+Los números de la balanza: `<br>` en **15 de 17** diagramas espontáneos, y **5 de 17** con
+basura visible hoy (`<b>` en tres, `<i>` en uno, `&lt;`/`&gt;` en uno). El aviso se paga por
+tanto en 5 de 17, no en 15 de 17. Y el dato incómodo que el ticket puso en la balanza —la
+descripción de las herramientas cubre un fallo de 0/17 e ignora éste— **se queda como dato**:
+el §5.3 revisa la descripción cuando el MVP exista y haya conversaciones de verdad que contar,
+y el aviso ya cierra el agujero sin tocar el peaje de cada llamada.
 
 ### 11.3 La checklist del primer día
 
@@ -1137,7 +1190,9 @@ puede corregir**: el agente es ciego y el usuario no lee el fuente.
    2026-09-04**: 12 falsos positivos sobre los 42 correctos y la regla se cae. El Límite
    honesto **no está dado por bueno**: antes de empaquetar hay que decidir qué se hace con
    los seis inventos (§4.1, y `docs/research/16-el-nodo-rastreable-medido.md` §9).
-3. **El tamaño del universal binary.** Referencia: el binario suelto de mmdr son 6,9 MB sin
+3. ~~**El HTML en las etiquetas** (riesgo 3)~~. **Hecho el 2026-09-04**: `<br>` conviven sin
+   aviso y todo lo demás enciende el cuarto aviso del §4.4. La Vista siempre se dibuja.
+4. **El tamaño del universal binary.** Referencia: el binario suelto de mmdr son 6,9 MB sin
    runtime, y falta `eframe` + `winit` + `resvg` + `rmcp` encima, en dos arquitecturas. Con el
    tope de 256 MiB y el caudal medido hay margen de sobra, pero conviene tener el número real
    antes de escribir el `marketplace.json`.
@@ -1154,6 +1209,9 @@ puede corregir**: el agente es ciego y el usuario no lee el fuente.
 - **La primera ventana roba el foco**, una vez por sesión (§6.2, y §11.1 pregunta 1).
 - **Sin la línea del `CLAUDE.md`, la pizarra no se usa jamás** por iniciativa del agente (§8.1).
 - **La prohibición de píxeles es limpiada-y-avisada, no imposible** (§3.2).
+- **El aviso del marcado literal no llega a los canales laterales** (§4.4 d): mira las
+  etiquetas de nodos, grupos y aristas, así que un `Note over` de `sequenceDiagram` con `<b>`
+  dentro se dibuja literal y callando. Las dos familias que se prometen no tienen ese hueco.
 - **Se pierden sin aviso** las pistas de longitud de arista, `cssClass`/`link` de `classDiagram`,
   cinco fugas de estructura en familias no probadas y dos deformaciones (§4.5).
 - **El nombre `flipchart` es provisional**, y el del repo (`ai-render`) no dice nada. Renombrar
