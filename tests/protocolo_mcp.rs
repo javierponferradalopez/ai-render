@@ -228,3 +228,52 @@ fn una_entrada_invalida_vuelve_marcada_como_error_de_herramienta() {
 
     assert_eq!(resultado["isError"], json!(true));
 }
+
+#[test]
+fn un_nodo_que_el_agente_no_declaro_vuelve_dentro_del_resultado_y_no_como_error_de_transporte() {
+    let mut sesion = Sesion::abierta();
+
+    let resultado = sesion.llama(
+        "show",
+        json!({ "view_id": "propuesto", "diagram": "flowchart TD\n  API[API Layer] --> Db\n" }),
+    );
+
+    assert_eq!(resultado["isError"], json!(true));
+}
+
+#[test]
+fn el_rechazo_dice_que_no_se_dibujo_y_que_la_vista_sigue_como_estaba() {
+    let mut sesion = Sesion::abierta();
+
+    let resultado = sesion.llama(
+        "show",
+        json!({ "view_id": "propuesto", "diagram": "flowchart TD\n  API[API Layer] --> Db\n" }),
+    );
+
+    assert_eq!(
+        texto(&resultado),
+        "Rejected: nothing was drawn; view \"propuesto\" is unchanged.\n\
+         1 node appears in the drawing that you did not declare.\n  \
+         \"Db\"  line 2  — only used in a relation\n\
+         Declare every node you name, and rewrite any line the renderer turned into one."
+    );
+}
+
+#[test]
+fn un_rechazo_no_toca_la_vista_que_ya_estaba_en_pantalla() {
+    let mut sesion = Sesion::abierta();
+    sesion.llama(
+        "show",
+        json!({ "view_id": "propuesto", "diagram": "flowchart TD\n  A[Uno] --> B[Dos]\n" }),
+    );
+
+    sesion.llama(
+        "show",
+        json!({ "view_id": "propuesto", "diagram": "flowchart TD\n  API[API Layer] --> Db\n" }),
+    );
+
+    assert_eq!(
+        texto(&sesion.llama("clear", json!({ "view_id": "propuesto" }))),
+        "Cleared view \"propuesto\". No views."
+    );
+}

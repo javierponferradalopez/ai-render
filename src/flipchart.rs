@@ -1,4 +1,4 @@
-use crate::diagram;
+use crate::diagram::{self, Rejection};
 use crate::viewer::{ViewerCommand, Wire};
 
 const MAX_VIEW_ID_CHARS: usize = 64;
@@ -25,29 +25,36 @@ impl Flipchart {
 
     pub fn show(&mut self, view_id: &str, diagram: &str) -> Result<String, String> {
         let id = view_id.trim();
+        self.draw(id, diagram)
+            .map_err(|rejection| rejection.told_about(id))
+    }
+
+    fn draw(&mut self, id: &str, source: &str) -> Result<String, Rejection> {
         if id.is_empty() {
-            return Err(rejection(id, "view_id must not be empty."));
-        }
-        if id.chars().count() > MAX_VIEW_ID_CHARS {
-            return Err(rejection(
-                id,
-                &format!(
-                    "view_id must be at most {MAX_VIEW_ID_CHARS} characters; got {}.",
-                    id.chars().count()
-                ),
+            return Err(Rejection::InvalidInput(
+                "view_id must not be empty.".to_string(),
             ));
         }
-        if diagram.trim().is_empty() {
-            return Err(rejection(id, "diagram must not be empty."));
+        if id.chars().count() > MAX_VIEW_ID_CHARS {
+            return Err(Rejection::InvalidInput(format!(
+                "view_id must be at most {MAX_VIEW_ID_CHARS} characters; got {}.",
+                id.chars().count()
+            )));
+        }
+        if source.trim().is_empty() {
+            return Err(Rejection::InvalidInput(
+                "diagram must not be empty.".to_string(),
+            ));
         }
 
-        let drawing = diagram::draw(diagram).map_err(|error| rejection(id, &error))?;
+        let drawing = diagram::draw(source)?;
+        let recount = drawing.recount();
 
         match self.views.iter_mut().find(|view| view.id == id) {
-            Some(view) => view.diagram = diagram.to_string(),
+            Some(view) => view.diagram = source.to_string(),
             None => self.views.push(View {
                 id: id.to_string(),
-                diagram: diagram.to_string(),
+                diagram: source.to_string(),
             }),
         }
         self.viewer.send(ViewerCommand::Show {
@@ -56,9 +63,8 @@ impl Flipchart {
         });
 
         Ok(format!(
-            "Shown as view \"{id}\" ({}, {}). {}",
-            plural(drawing.nodes, "node"),
-            plural(drawing.edges, "edge"),
+            "Shown as view \"{id}\" ({}). {}",
+            recount,
             self.views_on_the_flipchart()
         ))
     }
@@ -113,18 +119,6 @@ impl Flipchart {
                 .collect::<Vec<_>>()
                 .join(", "),
         )
-    }
-}
-
-fn rejection(view_id: &str, diagnostic: &str) -> String {
-    format!("Rejected: nothing was drawn; view \"{view_id}\" is unchanged.\n{diagnostic}")
-}
-
-fn plural(count: usize, noun: &str) -> String {
-    if count == 1 {
-        format!("{count} {noun}")
-    } else {
-        format!("{count} {noun}s")
     }
 }
 

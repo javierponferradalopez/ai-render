@@ -1,5 +1,6 @@
 mod diagram;
 mod flipchart;
+mod honest_limit;
 mod mac;
 mod raster;
 mod server;
