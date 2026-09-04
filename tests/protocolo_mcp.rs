@@ -190,12 +190,49 @@ fn show_devuelve_el_acuse_con_recuento_y_vistas_vivas() {
 
     let resultado = sesion.llama(
         "show",
-        json!({ "view_id": "actual", "diagram": "flowchart TD\n  A[Uno] --> B[Dos]\n" }),
+        json!({ "view_id": "actual", "diagram": "flowchart LR\n  A[Uno] --> B[Dos]\n" }),
     );
 
     assert_eq!(
         texto(&resultado),
         "Shown as view \"actual\" (2 nodes, 1 edge). Views on the flipchart: actual."
+    );
+}
+
+#[test]
+fn un_aviso_viaja_con_la_vista_dibujada_y_no_como_error() {
+    let mut sesion = Sesion::abierta();
+
+    let resultado = sesion.llama(
+        "show",
+        json!({
+            "view_id": "actual",
+            "diagram": "flowchart TB\n  classDef danger fill:#f00\n  A[Uno] --> B[Dos]\n"
+        }),
+    );
+
+    assert_eq!(resultado["isError"], json!(false));
+}
+
+#[test]
+fn los_avisos_llegan_detras_del_acuse_y_se_acumulan() {
+    let mut sesion = Sesion::abierta();
+
+    let resultado = sesion.llama(
+        "show",
+        json!({
+            "view_id": "actual",
+            "diagram": "flowchart TB\n  classDef danger fill:#f00\n  A[Uno] --> B[Dos]\n"
+        }),
+    );
+
+    assert_eq!(
+        texto(&resultado),
+        "Shown as view \"actual\" (2 nodes, 1 edge). Views on the flipchart: actual.\n\
+         Note: style directives (classDef, class, style, linkStyle) and click links were \
+         dropped — the flipchart decides how views look. The view was drawn.\n\
+         Note: the flipchart lays diagrams out left to right; the direction in your source \
+         was ignored. The view was drawn."
     );
 }
 

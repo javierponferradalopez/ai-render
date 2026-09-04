@@ -21,7 +21,7 @@ pub fn check(paths: &[String]) {
 
 fn outcome_of(source: &str, view_id: &str) -> String {
     match diagram::draw(source) {
-        Ok(drawing) => format!("drawn\n{}", drawing.recount()),
+        Ok(drawing) => drawing.noted_after(format!("drawn\n{}", drawing.recount())),
         Err(rejection) => format!("{}\n{}", rejection.outcome(), rejection.told_about(view_id)),
     }
 }
@@ -39,9 +39,21 @@ mod tests {
 
     #[test]
     fn un_diagrama_que_se_dibuja_dice_el_desenlace_y_el_recuento() {
-        let texto = outcome_of("flowchart TD\n  A[Uno] --> B[Dos]\n", "dos-nodos");
+        let texto = outcome_of("flowchart LR\n  A[Uno] --> B[Dos]\n", "dos-nodos");
 
         assert_eq!(texto, "drawn\n2 nodes, 1 edge");
+    }
+
+    #[test]
+    fn un_dibujo_con_aviso_lo_imprime_detras_del_recuento() {
+        let texto = outcome_of("flowchart TB\n  A[Uno] --> B[Dos]\n", "dos-nodos");
+
+        assert_eq!(
+            texto,
+            "drawn\n2 nodes, 1 edge\n\
+             Note: the flipchart lays diagrams out left to right; the direction in your \
+             source was ignored. The view was drawn."
+        );
     }
 
     #[test]

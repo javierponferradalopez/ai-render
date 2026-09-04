@@ -6,12 +6,14 @@ use mermaid_rs_renderer::{
 };
 
 use crate::honest_limit::undeclared_nodes;
+use crate::house_style;
 
 #[derive(Debug)]
 pub struct Drawing {
     pub svg: String,
     pub nodes: usize,
     pub edges: usize,
+    pub notes: Vec<&'static str>,
 }
 
 impl Drawing {
@@ -23,6 +25,16 @@ impl Drawing {
             plural(self.nodes, "node"),
             plural(self.edges, "edge")
         )
+    }
+
+    /// Los avisos van detrás, uno por línea: el agente lee primero el desenlace
+    /// y después el precio.
+    pub fn noted_after(&self, text: String) -> String {
+        self.notes.iter().fold(text, |mut told, note| {
+            told.push('\n');
+            told.push_str(note);
+            told
+        })
     }
 }
 
@@ -80,12 +92,14 @@ fn theme() -> Theme {
 }
 
 pub fn draw(source: &str) -> Result<Drawing, Rejection> {
-    let parsed = guarded(|| read(source))?.map_err(Rejection::Unparsed)?;
-    let graph = parsed.graph;
+    let mut parsed = guarded(|| read(source))?.map_err(Rejection::Unparsed)?;
 
-    if let Some(diagnostic) = undeclared_nodes(&graph, source) {
+    if let Some(diagnostic) = undeclared_nodes(&parsed.graph, source) {
         return Err(Rejection::Undeclared(diagnostic));
     }
+
+    let notes = house_style::imposed_on(&mut parsed, source);
+    let graph = parsed.graph;
 
     let (theme, config) = (theme(), LayoutConfig::default());
     let svg = guarded(|| {
@@ -97,6 +111,7 @@ pub fn draw(source: &str) -> Result<Drawing, Rejection> {
         svg,
         nodes: graph.nodes.len(),
         edges: graph.edges.len(),
+        notes,
     })
 }
 

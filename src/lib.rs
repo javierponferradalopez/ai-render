@@ -2,6 +2,7 @@ mod check;
 mod diagram;
 mod flipchart;
 mod honest_limit;
+mod house_style;
 mod mac;
 mod raster;
 mod server;

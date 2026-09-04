@@ -57,16 +57,17 @@ impl Flipchart {
                 diagram: source.to_string(),
             }),
         }
+        let acknowledgement = drawing.noted_after(format!(
+            "Shown as view \"{id}\" ({}). {}",
+            recount,
+            self.views_on_the_flipchart()
+        ));
         self.viewer.send(ViewerCommand::Show {
             view_id: id.to_string(),
             svg: drawing.svg,
         });
 
-        Ok(format!(
-            "Shown as view \"{id}\" ({}). {}",
-            recount,
-            self.views_on_the_flipchart()
-        ))
+        Ok(acknowledgement)
     }
 
     pub fn clear(&mut self, view_id: Option<&str>) -> String {
@@ -127,9 +128,10 @@ mod tests {
     use super::*;
     use crate::viewer::{Commands, wire};
 
-    const DOS_NODOS: &str = "flowchart TD\n  A[Uno] --> B[Dos]\n";
-    const TRES_NODOS: &str = "flowchart TD\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
-    const UN_NODO: &str = "flowchart TD\n  A[Solo]\n";
+    const DOS_NODOS: &str = "flowchart LR\n  A[Uno] --> B[Dos]\n";
+    const TRES_NODOS: &str = "flowchart LR\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
+    const TRES_NODOS_HACIA_ABAJO: &str = "flowchart TB\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
+    const UN_NODO: &str = "flowchart LR\n  A[Solo]\n";
 
     fn pizarra() -> (Flipchart, Commands) {
         let (viewer, commands) = wire();
@@ -154,7 +156,7 @@ mod tests {
     fn el_recuento_va_en_singular_cuando_hay_uno_de_cada() {
         let (mut flipchart, _commands) = pizarra();
 
-        let acuse = flipchart.show("solo", "flowchart TD\n  A[Uno] --> B[Dos]\n");
+        let acuse = flipchart.show("solo", DOS_NODOS);
 
         assert!(acuse.unwrap().contains("(2 nodes, 1 edge)"));
     }
@@ -365,6 +367,34 @@ mod tests {
         let texto = flipchart.clear(None);
 
         assert_eq!(texto, "The flipchart was already empty.");
+    }
+
+    #[test]
+    fn el_acuse_arrastra_los_avisos_detras() {
+        let (mut flipchart, _commands) = pizarra();
+
+        let acuse = flipchart.show("actual", TRES_NODOS_HACIA_ABAJO).unwrap();
+
+        assert_eq!(
+            acuse,
+            "Shown as view \"actual\" (3 nodes, 2 edges). Views on the flipchart: actual.\n\
+             Note: the flipchart lays diagrams out left to right; the direction in your \
+             source was ignored. The view was drawn."
+        );
+    }
+
+    #[test]
+    fn un_rechazo_no_lleva_avisos() {
+        let (mut flipchart, _commands) = pizarra();
+
+        let rechazo = flipchart
+            .show(
+                "actual",
+                "flowchart TB\n  classDef danger fill:#f00\n  A[Uno] --> Db\n",
+            )
+            .unwrap_err();
+
+        assert!(!rechazo.contains("Note:"));
     }
 
     #[test]
