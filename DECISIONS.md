@@ -1083,6 +1083,12 @@ que **el host ya versiona por directorio y cuenta referencias por proceso**; y
 `/plugin uninstall` **borra los datos del plugin** (`--keep-data` existe para evitarlo), así que
 **el README no necesita ninguna línea de `rm -rf`**. Para desactivar sin desinstalar, `/plugin`.
 
+**Y el `update` quiere el nombre con marketplace.** Medido sobre `v0.1.0` → `v0.1.1`
+(research 20 §5): `update flipchart@flipchart` actualiza en 2,2 s, y `update flipchart` a secas
+contesta `Plugin "flipchart" not found` con el plugin instalado y listado como `enabled`.
+`uninstall`, en cambio, sí resuelve el nombre corto. El README escribe la forma larga en los
+dos, que es la que funciona siempre.
+
 ### 10.7 Requisitos honestos
 
 - **macOS 11 o superior** (Intel o Apple Silicon). **Confirmado con el build el 2026-09-04**,

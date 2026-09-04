@@ -77,8 +77,9 @@ Porque es el camino que está medido, y el único que llega a una máquina utili
 teclear. Para desactivarla sin desinstalarla, `/plugin`.
 
 Dos avisos de disco, los dos medidos: entre una actualización y la poda automática la caché
-guarda **las dos versiones** del binario, no una; y tras desinstalar, el binario **sigue en
-disco** —marcado como huérfano— hasta que esa misma poda pase. Son unos 49 MB por versión.
+guarda **las dos versiones** del binario, no una —47 MB pasan a 94—; y tras desinstalar, el
+binario **sigue en disco** —marcado como huérfano— hasta que esa misma poda pase. Son unos
+49 MB por versión.
 
 Y una regla que es nuestra, no tuya, pero explica lo que verías si la rompiéramos: `update`
 sólo trae algo si la versión ha subido. Un arreglo publicado sin subirla se descarga entero,

@@ -149,22 +149,10 @@ y un `graph TD`.
   mismo resultado: `plugin install flipchart@flipchart` en 5,5 s, el universal entero en la
   caché (49 215 680 bytes, `100755`), `com.apple.provenance` y **ninguna cuarentena**, 47 MB de
   `CLAUDE_CONFIG_DIR`, y el servidor `connected` en la sesión.
-- **El `update`** — research 15 §5: con el bump completo, `✔ Plugin "flipchart" updated from
-  1.0.0 to 2.0.0`; y sin subir la versión, `already at the latest version` **después de
-  bajarse el zip entero y tirarlo**. Es la mecánica del host, medida con un plugin sonda
-  alojado de verdad. Lo que falta no es mecánica: es el primer `v0.1.1` de flipchart.
-
-  Sobre el plugin de verdad sí se ha medido el caso (a), y de paso una trampa que va al README:
-  **`update` no resuelve el nombre corto.**
-
-  ```
-  claude plugin update flipchart            ✘ Failed to update plugin "flipchart": Plugin "flipchart" not found
-  claude plugin update flipchart@flipchart  ✔ flipchart is already at the latest version (0.1.0)
-  ```
-
-  Y no es una regla general de los comandos de plugin: `uninstall flipchart`, con el nombre
-  corto, desinstaló sin queja. Lo que el `✘` no dice es que el plugin **estaba** instalado y
-  `plugin list` lo mostraba `enabled`.
+- **El `update`** — research 15 §5 lo midió con un plugin sonda: con el bump completo,
+  `updated from 1.0.0 to 2.0.0`; y sin subir la versión, `already at the latest version`
+  **después de bajarse el zip entero y tirarlo**. Aquí se cierra con el plugin de verdad, y
+  tiene su propio apartado: **§5**.
 - **El `uninstall`** — research 09 §5, y **repetido hoy con el plugin de verdad**:
   `plugin uninstall flipchart` vació `plugins/data/flipchart-flipchart/`, dejó
   `installed_plugins.json` en `{}` y marcó la caja con un `.orphaned_at`. **El README no lleva
@@ -172,11 +160,47 @@ y un `graph TD`.
   **siguen en disco** hasta que pase la poda por antigüedad. Desinstalar libera los datos al
   instante y el espacio con retraso.
 
+## 5. El `update`, cerrado con el release de verdad
+
+Para esto se publicó **`v0.1.1`**: un release cuyo contenido es idéntico al de `v0.1.0` salvo
+el número, gastado a sabiendas en medir lo que sólo se mide publicando. La CI corrió sus doce
+pasos y commiteó el catálogo en `main`, que es lo que el host lee.
+
+El banco tenía la **0.1.0 instalada desde antes de publicar**, que es la precondición que no se
+puede saltar: instalar después es instalar ya la nueva y no hay update que medir.
+
+| Medida | Valor |
+|---|---|
+| El catálogo tras `marketplace update` | `"version": "0.1.1"` |
+| `plugin update flipchart@flipchart` | **`✔ Plugin "flipchart" updated from 0.1.0 to 0.1.1 for scope user`** |
+| Lo que tardó | **2,2 s** |
+| La caché después | **`0.1.0` y `0.1.1`, las dos** |
+| El `CLAUDE_CONFIG_DIR` | 47 MB → **94 MB** |
+| El binario nuevo | 49 215 664 bytes, `100755`, `com.apple.provenance` y ninguna cuarentena |
+| Su handshake | `serverInfo: {"name":"flipchart","version":"0.1.1"}` |
+
+**Ni un `already at the latest version`**, que era el desenlace que había que descartar. Y el
+pico de disco de research 19 §2 queda confirmado por medición y no por estimación: se calculó
+en ~98 MB para las dos versiones y son **94 MB**.
+
+Que el handshake devuelva `0.1.1` cierra además la única duda que quedaba del camino: contesta
+el binario nuevo, no el Lanzador —el Servidor de aviso se identifica como
+`version: unavailable`—, así que la caja que el `update` trajo está entera y utilizable.
+
+Y una trampa que va derecha al README: **`update` no resuelve el nombre corto.**
+
+```
+claude plugin update flipchart            ✘ Failed to update plugin "flipchart": Plugin "flipchart" not found
+claude plugin update flipchart@flipchart  ✔ …
+```
+
+No es una regla general de los comandos de plugin: `uninstall flipchart`, con el nombre corto,
+desinstaló sin queja. Lo que el `✘` no dice es que el plugin **estaba** instalado y
+`plugin list` lo mostraba `enabled` — un usuario que lea ese error concluye que se le ha roto
+la instalación.
+
 ## Lo que no se ha medido
 
-- **`/plugin update` sobre el plugin de verdad.** Pide publicar un `v0.1.1`, y publicar no es
-  un experimento reversible. La mecánica que recorrería es la de research 15 §5, con el mismo
-  host y el mismo tipo de `source`.
 - **Un macOS anterior al 26.6.2.** El umbral está declarado por el binario, no ejecutado.
 - **La línea con otras redacciones.** Se mide la que va al README. Las cuatro que fracasaron
   eran del texto de la herramienta, no de esta línea (§8.1).

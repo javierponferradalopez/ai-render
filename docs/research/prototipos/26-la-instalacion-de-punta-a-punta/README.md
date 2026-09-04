@@ -11,8 +11,12 @@ se contestan con el plugin de verdad delante:
    midió contra un servidor falso y con la línea en su primera redacción. Esto lo repite con
    el release `v0.1.0` instalado y con la redacción que va al README.
 
-No hay aquí nada del vehículo del zip —eso es el [prototipo 17](../17-el-vehiculo-del-zip/) y
-research 19 §5—, ni de la mecánica del `update`, que está medida en research 15 §5.
+Y una tercera, que llegó publicando: **¿trae `/plugin update` la versión nueva?** La mecánica
+estaba medida con un plugin sonda (research 15 §5); lo que faltaba era el primer `v0.1.1` de
+flipchart, y con él está `mide-el-update.sh`.
+
+No hay aquí nada del vehículo del zip: eso es el [prototipo 17](../17-el-vehiculo-del-zip/) y
+research 19 §5.
 
 ## Las piezas
 
@@ -22,8 +26,9 @@ research 19 §5—, ni de la mecánica del `update`, que está medida en researc
 | `corre-con-la-linea.sh` | El escenario `refactor` del prototipo 22 —tres turnos, y el usuario no pide dibujo— contra el plugin del release. Con `--control-positivo`, el turno que pide el dibujo a la cara. |
 | `condiciones/CLAUDE.md.con-la-linea` | Lo único que se le da al sujeto: la línea del §8.2, con el nombre de herramienta ya medido. |
 | `condiciones/concede-la-pizarra.sh` | El hook `PreToolUse` que concede la pizarra y nada más — el único mecanismo que la deja ejecutarse en modo `-p`. |
+| `mide-el-update.sh` | El `update` del plugin de verdad, de la versión vieja a la nueva: el catálogo, el desenlace, la caché, el disco y el handshake del binario nuevo. |
 | `destila.py` | Del stream de cada turno se queda con lo que dice algo: la pizarra en la lista de herramientas, las llamadas, lo que contestaron y la respuesta del agente. |
-| `registros/` | Las tres corridas destiladas: `r1-sin-permiso/`, `r2-con-permiso/` y `r3-control-positivo/`. |
+| `registros/` | Las cuatro corridas: `r1-sin-permiso/`, `r2-con-permiso/`, `r3-control-positivo/` y `r4-el-update/`. |
 
 ## El banco
 
