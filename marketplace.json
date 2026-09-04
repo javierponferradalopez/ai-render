@@ -1,0 +1,17 @@
+{
+  "name": "flipchart",
+  "description": "A native window where the agent draws what it is explaining: Mermaid diagrams, one sheet at a time, gone with the session",
+  "owner": { "name": "javierponferradalopez" },
+  "plugins": [
+    {
+      "name": "flipchart",
+      "description": "A native window where the agent draws what it is explaining: Mermaid diagrams, one sheet at a time, gone with the session",
+      "version": "0.1.0",
+      "source": {
+        "source": "archive",
+        "url": "https://github.com/javierponferradalopez/ai-render/releases/download/v0.1.0/flipchart-0.1.0.zip",
+        "sha256": "6569bf384de04df71f78fd886d6a097ab9e769dbfc06acd3e9b249b966e822c3"
+      }
+    }
+  ]
+}
