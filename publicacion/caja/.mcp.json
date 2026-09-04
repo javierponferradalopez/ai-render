@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "flipchart": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/launcher.sh"
+    }
+  }
+}
