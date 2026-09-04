@@ -1,5 +1,6 @@
 //! El SVG a píxeles, en un hilo de trabajo: el event loop sólo sube la textura.
 
+use std::collections::HashMap;
 use std::sync::mpsc::{Receiver, Sender, TryIter, channel};
 use std::thread;
 
@@ -23,7 +24,7 @@ impl Scale {
 
 #[derive(Debug)]
 enum Job {
-    Load { sheet: u64, svg: String },
+    Deck { sheets: Vec<(u64, String)> },
     Paint { sheet: u64, scale: Scale },
 }
 
@@ -56,8 +57,10 @@ impl Rasterizer {
         Self { jobs, rendered }
     }
 
-    pub fn load(&self, sheet: u64, svg: String) {
-        let _ = self.jobs.send(Job::Load { sheet, svg });
+    /// Las hojas vivas, en el orden en que están: las que el hilo no tenía se
+    /// leen y se miden, y las que ya no vienen se sueltan.
+    pub fn deck(&self, sheets: Vec<(u64, String)>) {
+        let _ = self.jobs.send(Job::Deck { sheets });
     }
 
     pub fn paint(&self, sheet: u64, scale: Scale) {
@@ -71,31 +74,51 @@ impl Rasterizer {
 
 fn work(jobs: &Receiver<Job>, done: &Sender<Rendered>, ctx: &egui::Context) {
     let options = system_fonts();
-    let mut loaded: Option<(u64, usvg::Tree)> = None;
+    let mut loaded: HashMap<u64, usvg::Tree> = HashMap::new();
     while let Ok(job) = jobs.recv() {
-        let rendered = match job {
-            Job::Load { sheet, svg } => match parse(&svg, &options) {
-                Some(tree) => {
-                    let natural = natural(&tree);
-                    loaded = Some((sheet, tree));
-                    Rendered::Measured { sheet, natural }
-                }
-                None => continue,
-            },
-            Job::Paint { sheet, scale } => match &loaded {
-                Some((cargada, tree)) if *cargada == sheet => Rendered::Painted {
+        let measured = match job {
+            Job::Deck { sheets } => {
+                loaded.retain(|sheet, _| sheets.iter().any(|(alive, _)| alive == sheet));
+                read(&sheets, &mut loaded, &options)
+            }
+            Job::Paint { sheet, scale } => match loaded.get(&sheet) {
+                Some(tree) => vec![Rendered::Painted {
                     sheet,
                     scale,
                     image: rasterize(tree, scale.factor()),
-                },
-                _ => continue,
+                }],
+                None => continue,
             },
         };
-        if done.send(rendered).is_err() {
-            return;
+        for rendered in measured {
+            if done.send(rendered).is_err() {
+                return;
+            }
         }
         ctx.request_repaint();
     }
+}
+
+fn read(
+    sheets: &[(u64, String)],
+    loaded: &mut HashMap<u64, usvg::Tree>,
+    options: &usvg::Options<'_>,
+) -> Vec<Rendered> {
+    let mut measured = Vec::new();
+    for (sheet, svg) in sheets {
+        if loaded.contains_key(sheet) {
+            continue;
+        }
+        let Some(tree) = parse(svg, options) else {
+            continue;
+        };
+        measured.push(Rendered::Measured {
+            sheet: *sheet,
+            natural: natural(&tree),
+        });
+        loaded.insert(*sheet, tree);
+    }
+    measured
 }
 
 fn system_fonts() -> usvg::Options<'static> {
@@ -168,6 +191,24 @@ mod tests {
     #[test]
     fn un_svg_que_no_se_lee_no_tumba_el_hilo() {
         assert!(parse("esto no es un SVG", &system_fonts()).is_none());
+    }
+
+    #[test]
+    fn una_hoja_ya_leida_no_se_vuelve_a_leer() {
+        let options = system_fonts();
+        let mut loaded = HashMap::new();
+        read(&[(1, CUADRADO.to_string())], &mut loaded, &options);
+
+        let medidas = read(
+            &[(1, CUADRADO.to_string()), (2, CUADRADO.to_string())],
+            &mut loaded,
+            &options,
+        );
+
+        assert!(matches!(
+            medidas.as_slice(),
+            [Rendered::Measured { sheet: 2, .. }]
+        ));
     }
 
     #[test]

@@ -1,17 +1,22 @@
 use crate::diagram::{self, Rejection};
-use crate::viewer::{ViewerCommand, Wire};
+use crate::viewer::{DeckSnapshot, Drawn, Wire};
 
 const MAX_VIEW_ID_CHARS: usize = 64;
 
+/// Una Vista viva. `drawn` la numera en el momento en que se dibujó, así que
+/// **la mayor es la del `show` vivo más reciente**: la que va delante.
 #[derive(Debug)]
 struct View {
     id: String,
     diagram: String,
+    svg: String,
+    drawn: u64,
 }
 
 #[derive(Debug)]
 pub struct Flipchart {
     views: Vec<View>,
+    drawn: u64,
     viewer: Wire,
 }
 
@@ -19,6 +24,7 @@ impl Flipchart {
     pub fn new(viewer: Wire) -> Self {
         Self {
             views: Vec::new(),
+            drawn: 0,
             viewer,
         }
     }
@@ -50,11 +56,19 @@ impl Flipchart {
         let drawing = diagram::draw(source)?;
         let recount = drawing.recount();
 
+        self.drawn += 1;
+        let drawn = self.drawn;
         match self.views.iter_mut().find(|view| view.id == id) {
-            Some(view) => view.diagram = source.to_string(),
+            Some(view) => {
+                view.diagram = source.to_string();
+                view.svg = drawing.svg.clone();
+                view.drawn = drawn;
+            }
             None => self.views.push(View {
                 id: id.to_string(),
                 diagram: source.to_string(),
+                svg: drawing.svg.clone(),
+                drawn,
             }),
         }
         let acknowledgement = drawing.noted_after(format!(
@@ -62,10 +76,7 @@ impl Flipchart {
             recount,
             self.views_on_the_flipchart()
         ));
-        self.viewer.send(ViewerCommand::Show {
-            view_id: id.to_string(),
-            svg: drawing.svg,
-        });
+        self.hand_the_deck_over();
 
         Ok(acknowledgement)
     }
@@ -76,7 +87,7 @@ impl Flipchart {
                 return "The flipchart was already empty.".to_string();
             }
             self.views.clear();
-            self.viewer.send(ViewerCommand::Clear);
+            self.hand_the_deck_over();
             return "Cleared the flipchart. No views.".to_string();
         };
 
@@ -84,8 +95,33 @@ impl Flipchart {
             return format!("No view \"{id}\" on the flipchart. {}", self.views());
         };
         self.views.remove(position);
-        self.viewer.send(ViewerCommand::Clear);
+        self.hand_the_deck_over();
         format!("Cleared view \"{id}\". {}", self.views_on_the_flipchart())
+    }
+
+    /// El orden es el de creación y la de delante es la del `show` vivo más
+    /// reciente. Las dos las decide aquí el Servidor MCP, no el Visor.
+    fn hand_the_deck_over(&mut self) {
+        self.viewer.send(DeckSnapshot {
+            sheets: self
+                .views
+                .iter()
+                .map(|view| Drawn {
+                    number: view.drawn,
+                    id: view.id.clone(),
+                    svg: view.svg.clone(),
+                })
+                .collect(),
+            front: self.front(),
+        });
+    }
+
+    fn front(&self) -> Option<usize> {
+        self.views
+            .iter()
+            .enumerate()
+            .max_by_key(|(_, view)| view.drawn)
+            .map(|(position, _)| position)
     }
 
     pub fn view(&self, view_id: &str) -> Option<&str> {
@@ -136,6 +172,27 @@ mod tests {
     fn pizarra() -> (Flipchart, Commands) {
         let (viewer, commands) = wire();
         (Flipchart::new(viewer), commands)
+    }
+
+    fn cruzada(commands: &Commands) -> DeckSnapshot {
+        let mut last = None;
+        while let Some(snapshot) = commands.try_recv() {
+            last = Some(snapshot);
+        }
+        last.expect("al Visor le cruzó una pizarra")
+    }
+
+    fn nombres(snapshot: &DeckSnapshot) -> Vec<&str> {
+        snapshot
+            .sheets
+            .iter()
+            .map(|sheet| sheet.id.as_str())
+            .collect()
+    }
+
+    fn delante(snapshot: &DeckSnapshot) -> &str {
+        let front = snapshot.front.expect("hay una hoja delante");
+        &snapshot.sheets[front].id
     }
 
     #[test]
@@ -197,10 +254,7 @@ mod tests {
 
         flipchart.show("actual", DOS_NODOS).unwrap();
 
-        let ViewerCommand::Show { view_id, .. } = commands.recv().unwrap() else {
-            panic!("el Visor esperaba un Show");
-        };
-        assert_eq!(view_id, "actual");
+        assert_eq!(nombres(&cruzada(&commands)), ["actual"]);
     }
 
     #[test]
@@ -209,11 +263,96 @@ mod tests {
 
         flipchart.show("actual", DOS_NODOS).unwrap();
 
-        let ViewerCommand::Show { svg, .. } = commands.recv().unwrap() else {
-            panic!("el Visor esperaba un Show");
-        };
+        let svg = &cruzada(&commands).sheets[0].svg;
         assert!(svg.starts_with("<svg"));
         assert!(svg.contains("Uno"));
+    }
+
+    #[test]
+    fn las_hojas_cruzan_en_orden_de_creacion_y_reemplazar_no_reordena() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+        flipchart.show("propuesto", DOS_NODOS).unwrap();
+
+        flipchart.show("actual", TRES_NODOS).unwrap();
+
+        assert_eq!(nombres(&cruzada(&commands)), ["actual", "propuesto"]);
+    }
+
+    #[test]
+    fn el_show_deja_su_vista_delante() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+        flipchart.show("propuesto", DOS_NODOS).unwrap();
+
+        flipchart.show("actual", TRES_NODOS).unwrap();
+
+        assert_eq!(delante(&cruzada(&commands)), "actual");
+    }
+
+    #[test]
+    fn reemplazar_una_vista_manda_una_hoja_nueva() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+        let primera = cruzada(&commands).sheets[0].number;
+
+        flipchart.show("actual", TRES_NODOS).unwrap();
+
+        assert_ne!(cruzada(&commands).sheets[0].number, primera);
+    }
+
+    #[test]
+    fn retirar_la_vista_de_delante_pasa_a_la_del_show_vivo_mas_reciente() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+        flipchart.show("propuesto", DOS_NODOS).unwrap();
+        flipchart.show("flujo", DOS_NODOS).unwrap();
+
+        flipchart.clear(Some("flujo"));
+
+        assert_eq!(delante(&cruzada(&commands)), "propuesto");
+    }
+
+    #[test]
+    fn retirar_otra_vista_deja_delante_la_que_ya_lo_estaba() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+        flipchart.show("propuesto", DOS_NODOS).unwrap();
+
+        flipchart.clear(Some("actual"));
+
+        assert_eq!(delante(&cruzada(&commands)), "propuesto");
+    }
+
+    #[test]
+    fn vaciar_la_pizarra_cruza_una_pizarra_sin_hojas() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+
+        flipchart.clear(None);
+
+        assert!(cruzada(&commands).sheets.is_empty());
+    }
+
+    #[test]
+    fn una_pizarra_sin_hojas_no_tiene_ninguna_delante() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+
+        flipchart.clear(None);
+
+        assert_eq!(cruzada(&commands).front, None);
+    }
+
+    #[test]
+    fn borrar_un_id_que_no_existe_no_le_cuenta_nada_al_visor() {
+        let (mut flipchart, commands) = pizarra();
+        flipchart.show("actual", DOS_NODOS).unwrap();
+        cruzada(&commands);
+
+        flipchart.clear(Some("propeusto"));
+
+        assert!(commands.try_recv().is_none());
     }
 
     #[test]
