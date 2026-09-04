@@ -810,8 +810,11 @@ que funciona depende de que el usuario pegue algo.
 
 *Nota de método, para quien repita la medición:* en Claude Code 2.1.228 **`--allowedTools` no
 concede herramientas MCP en modo `-p`**, así que el instrumento es el recuento de `tool_use`
-del historial, no el registro del servidor. Y el sujeto es el modelo de hoy: el resultado
-accionable es *el texto no basta*, no una cifra.
+del historial, no el registro del servidor. Tampoco las conceden los settings del proyecto —que
+piden haber confiado antes en el directorio— ni un `permissions.allow` pasado con `--settings`:
+**lo único que las concede es un hook `PreToolUse` que contesta `permissionDecision: allow`**
+(research 20). Y el sujeto es el modelo de hoy: el resultado accionable es *el texto no basta*,
+no una cifra.
 
 ### 8.2 La línea recomendada es el último paso de la instalación
 
@@ -827,8 +830,22 @@ Redacción de referencia:
 
 ```
 Cuando me expliques una estructura o un cambio de estructura, dibújalo en la
-pizarra con mcp__flipchart__show en vez de en ASCII o en prosa.
+pizarra con mcp__plugin_flipchart_flipchart__show en vez de en ASCII o en prosa.
 ```
+
+**El nombre de la herramienta lo compone el host, y no es el que se supone.** Medido el
+2026-09-04 sobre el release `v0.1.0` instalado, Claude Code 2.1.228 la presenta como
+**`mcp__plugin_flipchart_flipchart__show`**: el prefijo `mcp__` lleva dentro el nombre del
+servidor, que para un plugin es `plugin:<plugin>:<servidor>` con los `:` cambiados por `_`.
+`mcp__flipchart__show` —lo que decía la redacción anterior— **nombra una herramienta que no
+existe**. Sale igual instalado desde el marketplace y cargado con `--plugin-dir`, así que no
+depende del marketplace: sólo de que el plugin y su servidor se llamen `flipchart`.
+
+Y la línea con ese nombre está **verificada de punta a punta**: con el plugin de verdad y el
+caso protagonista del §8.1 —el usuario cuenta el movimiento que se plantea y pide entender
+las dependencias, sin pedir dibujo— el agente cargó la herramienta y dibujó
+`Dependencias actuales` en el primer turno
+(`docs/research/20-la-instalacion-y-la-linea-verificadas.md`).
 
 ---
 
@@ -1068,9 +1085,15 @@ que **el host ya versiona por directorio y cuenta referencias por proceso**; y
 
 ### 10.7 Requisitos honestos
 
-- **macOS** (Intel o Apple Silicon). Umbral: **macOS 12 o superior, provisional, a confirmar
-  con el primer build** — lo fija lo que exijan `eframe`/`winit`, y no se puede saber sin
-  construir. Preferimos eso a inventarnos un número que suene bien.
+- **macOS 11 o superior** (Intel o Apple Silicon). **Confirmado con el build el 2026-09-04**,
+  y el número no es el provisional: lo declara el propio Mach-O —`minos 11.0` en la rebanada
+  `arm64` y `10.12` en la `x86_64`—, y por debajo de lo declarado no lo arranca el cargador.
+  Se promete el mayor de los dos, que es además el primero que existe en Apple Silicon. No
+  hay ninguna API weak-linked en el binario: los símbolos que importa de AppKit y Foundation
+  —`beginActivityWithOptions:reason:`, `setActivationPolicy:`, `orderFrontRegardless`— son de
+  10.9 y anteriores, así que `eframe`/`winit` no suben el umbral por encima de lo que el
+  linker escribe. **Lo que no se ha medido y se escribe como tal: correrlo en un macOS
+  anterior al 26.6.2 del banco.**
 - Una versión de Claude Code con soporte de plugins.
 - **No hay Node, no hay Python, no hay navegador, no hay toolchain de Rust.**
 
@@ -1268,7 +1291,11 @@ un release publicado de verdad.
 - **Se pierden sin aviso** las pistas de longitud de arista, `cssClass`/`link` de `classDiagram`,
   cinco fugas de estructura en familias no probadas y dos deformaciones (§4.5).
 - **El nombre `flipchart` es provisional**, y el del repo (`ai-render`) no dice nada. Renombrar
-  es trivial y no es una decisión del MVP.
+  el repo es trivial; renombrar el plugin o su servidor **ya no lo es**: el nombre va dentro de
+  la línea que la gente tiene pegada en su `CLAUDE.md`
+  (`mcp__plugin_flipchart_flipchart__show`, §8.2), y ese fichero no lo escribimos nosotros. Un
+  renombrado deja a cada instalación existente nombrando una herramienta que no existe, en
+  silencio y sin forma de avisar.
 
 ---
 
