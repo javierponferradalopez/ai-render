@@ -304,8 +304,19 @@ id suelto:
   como candidato.
 - `API[API Layer] --> Db`, con `Db` sin aparecer en ningún otro sitio → **rechazado**.
 
-**Regla del nodo rastreable** — caza el **Nodo apócrifo**, el que fabrica *el parser* al
-rendirse con una línea que no supo clasificar:
+**Regla del nodo rastreable. MEDIDA EL 2026-09-04, Y SE CAE.** Lo que sigue es cómo quedó
+redactada y por qué; el censo está en `docs/research/16-el-nodo-rastreable-medido.md` y el
+número que la tumba es **12 falsos positivos sobre los 42 casos correctos del banco, nueve
+de ellos suyos**: mmdr sí fabrica ids sintéticos legítimos —`__start_root__` por el `[*]` de
+`stateDiagram-v2`, y `journey_0`, `quadrant_0`, `packet_0`, `treemap_0`—, y perdonarlos por
+la forma del id libera `radar_0`, que es el invento que mejor mataba. La rebaja pide saber
+qué familias implementa mmdr de verdad: **la lista de familias, con otro nombre**. Lo que
+vuelve a estar abierto es **qué se hace con los seis inventos** —no el reparto de arriba, que
+sigue en pie—; el §9 del informe deja los datos para elegir. La regla sigue en el código
+hasta que esa decisión se tome.
+
+Caza el **Nodo apócrifo**, el que fabrica *el parser* al rendirse con una línea que no supo
+clasificar:
 
 > Todo `id` del `Graph` tiene que aparecer como token en el fuente que escribió el agente,
 > careado **contra el fuente sin su primera línea**.
@@ -1060,7 +1071,24 @@ obtenido en el mensaje; el modo real es `100755`, así que el `chmod +x` del Lan
 y no mecanismo; y el `update` con `version` declarada dentro del zip **trae la versión nueva**
 (`updated from 1.0.0 to 2.0.0`).
 
-**(2) La regla del nodo rastreable. Se mide ANTES de darla por buena.**
+**(2) La regla del nodo rastreable. CERRADA, y en contra.** Medida el 2026-09-04 contra el
+banco de 63 con `flipchart check`
+(`docs/research/16-el-nodo-rastreable-medido.md`, arnés en el prototipo 23).
+
+**Doce falsos positivos sobre los 42 casos correctos**, nueve de ellos de esta regla, y entre
+ellos todo `stateDiagram-v2` que use `[*]` más `journey`, `quadrantChart`, `packet-beta` y
+`treemap-beta` enteros: mmdr fabrica ids sintéticos legítimos (`__start_root__`,
+`<familia>_<n>`) y el careo contra el fuente no los distingue de un apócrifo. Perdonarlos por
+la forma del id **libera `radar-beta`**, que es lo que la regla mejor mataba, así que la
+acotación pide justo la lista de familias que la regla presumía no necesitar. Compra lo
+prometido —caza 5 de los 6 inventos, mata `radar-beta` sin lista— y no alcanza para pagarlo.
+De rebote, la regla de la asimetría se lleva los otros cuatro falsos positivos, y uno es un
+defecto plano: `class X` a secas **es** una declaración y `declares_itself` no lo sabe.
+
+> **Se ejecuta el plan B:** vuelve a estar abierto **qué se hace con los seis inventos**, y
+> nada más. El §9 del informe deja los datos para elegir; §4.1 queda marcado.
+
+Lo que se sospechaba, y por qué había que medirlo antes:
 
 Es la pata central del Límite honesto y **está decidida sobre un mecanismo leído, no ejecutado**.
 Si mmdr fabrica algún `id` sintético legítimo —un `subgraph` sin id declarado, algo interno de
@@ -1105,8 +1133,10 @@ puede corregir**: el agente es ciego y el usuario no lee el fuente.
 
 1. ~~**La cuarentena del zip** (riesgo 1)~~. **Hecho el 2026-09-03**: no hay cuarentena y el
    vehículo del §10.1 se queda como está. El empaquetado puede empezar.
-2. **La regla del nodo rastreable contra el banco de 63 casos** (riesgo 2). Antes de dar el
-   Límite honesto por bueno.
+2. ~~**La regla del nodo rastreable contra el banco de 63 casos** (riesgo 2)~~. **Hecho el
+   2026-09-04**: 12 falsos positivos sobre los 42 correctos y la regla se cae. El Límite
+   honesto **no está dado por bueno**: antes de empaquetar hay que decidir qué se hace con
+   los seis inventos (§4.1, y `docs/research/16-el-nodo-rastreable-medido.md` §9).
 3. **El tamaño del universal binary.** Referencia: el binario suelto de mmdr son 6,9 MB sin
    runtime, y falta `eframe` + `winit` + `resvg` + `rmcp` encima, en dos arquitecturas. Con el
    tope de 256 MiB y el caudal medido hay margen de sobra, pero conviene tener el número real
