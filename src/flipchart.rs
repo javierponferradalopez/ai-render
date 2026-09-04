@@ -162,7 +162,7 @@ impl Flipchart {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::viewer::{Commands, wire};
+    use crate::viewer::{Command, Commands, wire};
 
     const DOS_NODOS: &str = "flowchart LR\n  A[Uno] --> B[Dos]\n";
     const TRES_NODOS: &str = "flowchart LR\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
@@ -176,7 +176,7 @@ mod tests {
 
     fn cruzada(commands: &Commands) -> DeckSnapshot {
         let mut last = None;
-        while let Some(snapshot) = commands.try_recv() {
+        while let Some(Command::Show(snapshot)) = commands.try_recv() {
             last = Some(snapshot);
         }
         last.expect("al Visor le cruzó una pizarra")

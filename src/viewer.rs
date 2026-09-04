@@ -27,18 +27,38 @@ pub struct DeckSnapshot {
     pub front: Option<usize>,
 }
 
+/// Lo que el Servidor le manda al Visor: dibujar la pizarra entera, o
+/// despedirse — que ocurre una vez y es lo último que cruza.
+#[derive(Debug)]
+pub enum Command {
+    Show(DeckSnapshot),
+    SessionOver,
+}
+
 /// El canal en memoria del Servidor al Visor. Es más que un `Sender`: despierta
 /// al event loop, que macOS no ralentiza sino que **para** con la ventana
 /// tapada — y tapada es el caso normal, con el usuario en su terminal.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Wire {
-    commands: Sender<DeckSnapshot>,
+    commands: Sender<Command>,
     awake: Waker,
 }
 
 impl Wire {
     pub fn send(&self, snapshot: DeckSnapshot) {
-        let _ = self.commands.send(snapshot);
+        self.tell(Command::Show(snapshot));
+    }
+
+    /// El adiós del Visor, que lo manda el hilo del servidor porque es el único
+    /// que sabe qué hora es. Dice si había ventana a la que despedir: una
+    /// sesión que nunca dibujó nada no tiene a quién decírselo.
+    pub fn say_goodbye(&self) -> bool {
+        self.tell(Command::SessionOver);
+        self.awake.get().is_some()
+    }
+
+    fn tell(&self, command: Command) {
+        let _ = self.commands.send(command);
         if let Some(ctx) = self.awake.get() {
             ctx.request_repaint();
         }
@@ -47,16 +67,16 @@ impl Wire {
 
 #[derive(Debug)]
 pub struct Commands {
-    commands: Receiver<DeckSnapshot>,
+    commands: Receiver<Command>,
     awake: Waker,
 }
 
 impl Commands {
-    pub(crate) fn recv(&self) -> Option<DeckSnapshot> {
+    pub(crate) fn recv(&self) -> Option<Command> {
         self.commands.recv().ok()
     }
 
-    pub(crate) fn try_recv(&self) -> Option<DeckSnapshot> {
+    pub(crate) fn try_recv(&self) -> Option<Command> {
         self.commands.try_recv().ok()
     }
 }
@@ -107,9 +127,10 @@ pub fn open_at_the_first_show(commands: Commands) {
 
 fn wait_for_the_first_show(commands: &Commands) -> Option<DeckSnapshot> {
     loop {
-        let snapshot = commands.recv()?;
-        if !snapshot.sheets.is_empty() {
-            return Some(snapshot);
+        match commands.recv()? {
+            Command::Show(snapshot) if !snapshot.sheets.is_empty() => return Some(snapshot),
+            Command::Show(_) => {}
+            Command::SessionOver => return None,
         }
     }
 }
@@ -210,7 +231,8 @@ struct Viewer {
     commands: Commands,
     rasterizer: Rasterizer,
     deck: Deck,
-    focus: Focus,
+    window: Window,
+    session_over: bool,
 }
 
 impl Viewer {
@@ -220,13 +242,17 @@ impl Viewer {
             commands,
             rasterizer: Rasterizer::spawn(cc.egui_ctx.clone()),
             deck: Deck::default(),
-            focus: Focus::default(),
+            window: Window::default(),
+            session_over: false,
         };
         viewer.accept(first);
         viewer
     }
 
     fn accept(&mut self, snapshot: DeckSnapshot) {
+        if !snapshot.sheets.is_empty() {
+            self.window.a_show_arrived();
+        }
         self.deck.accept(&snapshot);
         self.rasterizer.deck(
             snapshot
@@ -315,17 +341,32 @@ impl Viewer {
 
 const MINIMUM_ZOOM: f32 = 0.05;
 
-/// El foco se roba cuando la ventana nace y **nunca en una actualización**:
-/// saltar al frente cada vez que el agente retoca, mientras el usuario escribe
-/// en la terminal, es intolerable.
+/// La ventana nace al primer `show` y **renace** en el siguiente tras un ⌘W,
+/// que la oculta y no la mata: en `eframe` cerrarla termina la aplicación —y
+/// con ella el servidor MCP, dejando al agente sin herramientas a media
+/// conversación— y en macOS un event loop de `winit` no se puede volver a
+/// arrancar, así que si muriera no habría segunda ventana nunca.
+///
+/// El foco se roba cuando nace y cuando renace, y **nunca en una
+/// actualización**: saltar al frente cada vez que el agente retoca, mientras el
+/// usuario escribe en la terminal, es intolerable.
 #[derive(Debug, Default)]
-struct Focus {
-    stolen: bool,
+struct Window {
+    open: bool,
+    asked_for: bool,
 }
 
-impl Focus {
-    fn steal(&mut self) -> bool {
-        !std::mem::replace(&mut self.stolen, true)
+impl Window {
+    fn a_show_arrived(&mut self) {
+        self.asked_for = true;
+    }
+
+    fn hidden(&mut self) {
+        self.open = false;
+    }
+
+    fn born(&mut self) -> bool {
+        std::mem::take(&mut self.asked_for) && !std::mem::replace(&mut self.open, true)
     }
 }
 
@@ -341,19 +382,41 @@ fn fit(natural: egui::Vec2, room: egui::Vec2) -> f32 {
 }
 
 impl eframe::App for Viewer {
-    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        if self.focus.steal() {
-            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Focus);
-            take_the_focus();
+    /// Con la ventana oculta `eframe` no corre una pasada de egui, así que
+    /// **todo lo que no sea pintar vive aquí**: es lo único que sigue
+    /// llamándose cuando la ventana no está, y sin ello un ⌘W la dejaría sin
+    /// renacer nunca.
+    fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if ctx.input(|input| input.viewport().close_requested()) {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            ctx.send_viewport_cmd(egui::ViewportCommand::Visible(false));
+            self.window.hidden();
         }
 
-        while let Some(snapshot) = self.commands.try_recv() {
-            self.accept(snapshot);
+        while let Some(command) = self.commands.try_recv() {
+            match command {
+                Command::Show(snapshot) => self.accept(snapshot),
+                Command::SessionOver => self.session_over = true,
+            }
         }
+
+        if self.window.born() {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
+            ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
+            take_the_focus();
+        }
+    }
+
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.collect(&ctx);
 
         egui::Frame::central_panel(ui.style()).show(ui, |ui| {
+            if self.session_over {
+                ui.heading("Sesión terminada");
+                ui.weak("La conversación que motivó esta pizarra ha acabado.");
+                return;
+            }
             if self.deck.sheets.is_empty() {
                 ui.weak("La pizarra está vacía.");
                 return;
@@ -374,12 +437,49 @@ mod tests {
     use super::*;
 
     #[test]
-    fn el_foco_se_roba_una_sola_vez() {
-        let mut focus = Focus::default();
+    fn la_ventana_nace_con_el_primer_show() {
+        let mut window = Window::default();
 
-        assert!(focus.steal());
-        assert!(!focus.steal());
-        assert!(!focus.steal());
+        window.a_show_arrived();
+
+        assert!(window.born());
+    }
+
+    #[test]
+    fn un_show_sobre_la_ventana_en_pie_no_le_vuelve_a_robar_el_foco() {
+        let mut window = Window::default();
+        window.a_show_arrived();
+        window.born();
+
+        window.a_show_arrived();
+
+        assert!(!window.born());
+    }
+
+    #[test]
+    fn tras_un_cmd_w_el_siguiente_show_hace_renacer_la_ventana_y_ahi_si_roba_el_foco() {
+        let mut window = nacida();
+
+        window.hidden();
+        window.a_show_arrived();
+
+        assert!(window.born());
+    }
+
+    #[test]
+    fn una_ventana_oculta_no_renace_sin_un_show() {
+        let mut window = nacida();
+
+        window.hidden();
+
+        assert!(!window.born());
+    }
+
+    fn nacida() -> Window {
+        let mut window = Window::default();
+        window.a_show_arrived();
+        window.born();
+        window
     }
 
     #[test]
@@ -432,6 +532,14 @@ mod tests {
     fn una_sesion_que_muere_sin_dibujar_nada_no_abre_ventana() {
         let (viewer, commands) = wire();
         drop(viewer);
+
+        assert!(wait_for_the_first_show(&commands).is_none());
+    }
+
+    #[test]
+    fn una_sesion_que_termina_antes_del_primer_show_no_abre_ventana_para_despedirse() {
+        let (viewer, commands) = wire();
+        viewer.say_goodbye();
 
         assert!(wait_for_the_first_show(&commands).is_none());
     }

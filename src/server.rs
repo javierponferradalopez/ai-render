@@ -5,8 +5,10 @@ use rmcp::model::{CallToolResult, ContentBlock, Implementation, ServerCapabiliti
 use rmcp::{ServerHandler, ServiceExt, tool, tool_router};
 use schemars::JsonSchema;
 use serde::Deserialize;
+use tokio::signal::unix::{SignalKind, signal};
 
 use crate::flipchart::Flipchart;
+use crate::lifecycle::the_session_is_over;
 use crate::viewer::Wire;
 
 #[derive(Deserialize, JsonSchema)]
@@ -75,18 +77,34 @@ impl ServerHandler for FlipchartServer {
     }
 }
 
-pub fn serve(viewer: Wire) {
+pub fn serve(viewer: Wire) -> ! {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .expect("the server thread owns its runtime");
-    runtime.block_on(async {
-        let Ok(service) = FlipchartServer::new(viewer)
-            .serve(rmcp::transport::stdio())
-            .await
-        else {
-            return;
-        };
-        let _ = service.waiting().await;
-    });
+    runtime.block_on(until_the_session_dies(viewer.clone()));
+    the_session_is_over(&viewer)
+}
+
+/// Las dos señales de muerte, en el orden en que llegan: `SIGINT` —lo primero
+/// que manda el host— y el EOF en stdin que la especificación de MCP sobre
+/// stdio manda atender. El `SIGINT` se escucha desde antes del `initialize`,
+/// porque desde que se registra deja de matar el proceso por su cuenta.
+async fn until_the_session_dies(viewer: Wire) {
+    let mut interrupted =
+        signal(SignalKind::interrupt()).expect("the server thread listens for SIGINT");
+    tokio::select! {
+        _ = interrupted.recv() => {}
+        _ = mcp_over_stdio(viewer) => {}
+    }
+}
+
+async fn mcp_over_stdio(viewer: Wire) {
+    let Ok(service) = FlipchartServer::new(viewer)
+        .serve(rmcp::transport::stdio())
+        .await
+    else {
+        return;
+    };
+    let _ = service.waiting().await;
 }

@@ -3,6 +3,7 @@ mod diagram;
 mod flipchart;
 mod honest_limit;
 mod house_style;
+mod lifecycle;
 mod mac;
 mod raster;
 mod server;
