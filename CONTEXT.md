@@ -15,15 +15,16 @@ Vistas y el Visor enseña una cada vez, sin índice de las demás, así que el n
 inglés —provisional— acierta con la metáfora: un rotafolio es exactamente eso.
 Quién pasa la hoja es el agente, porque la Pizarra es su canal para explicarse; el
 usuario puede retroceder una hoja, y para cualquier otra cosa se lo pide. Abrirla no se
-pregunta: la abre el primer show, sin permiso y robando el foco una vez. Lo que sí depende
-de fuera es que llegue a haber un primer show — medido, el agente no la ofrece nunca y no la
-usa hasta que se le pide o se le manda.
+pregunta: la abre el primer show, sin permiso y **sin robar el teclado** — la ventana se pone
+delante y el foco se queda donde el usuario lo tenía. Lo que sí depende de fuera es que llegue
+a haber un primer show — medido, el agente no la ofrece nunca y no la usa hasta que se le pide
+o se le manda.
 _Avoid_: canvas (en español), lienzo, board, tablero; y como identificadores,
 `canvas`, `board` o `whiteboard`
 
 **Apertura pedida**:
 El permiso que la Pizarra iba a pedirle al usuario antes del primer show de la sesión —el
-que hace aparecer la ventana y le roba el foco—. **No existe, y el término se conserva para
+que hace aparecer la ventana, y que cuando esto se decidió le robaba además el foco—. **No existe, y el término se conserva para
 que no se reinvente.** Medido, no ocurría: el agente anuncia y dibuja, y no espera ningún sí.
 Era cortesía declarada y no mecanismo —nada en el protocolo distingue el show pedido del que
 no lo fue—, y se retiró al ver que lo que quería comprar ya lo compra ese anuncio, gratis. Lo

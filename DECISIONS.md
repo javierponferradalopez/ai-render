@@ -695,29 +695,44 @@ lo pide al agente y la hoja pasa sola, que es un `show` y un turno. **Las flecha
 porque cuestan cero y salvan el *«déjame volver un segundo a lo anterior»* sin gastar un
 turno: es el único mando que el usuario tiene, y no toca lo que hay, sólo cuál se mira.
 
-### 6.2 La ventana: cuándo aparece, cuándo roba el foco, cuándo desaparece
+### 6.2 La ventana: cuándo aparece, cuándo va delante, cuándo desaparece
 
 - **Arranque diferido.** El hilo principal **no llama a `run_native` hasta el primer `show`**:
   arranca el hilo del servidor y se bloquea esperando en el canal. Una sesión que abre un repo
   y nunca pide un diagrama no debe pagar 97 MB por una ventana que no existe; hasta entonces
   el coste es del orden de 5 MB. Y si la sesión muere sin usar la pizarra, sale sin haber
   tocado la GPU.
-- **La ventana nace robando el foco, y sin pedir permiso.** Al primer `show` la app sube de
-  `Accessory` a `Regular` (`NSApplication.setActivationPolicy`) y llama a `activate()`: eso es
-  lo que le da icono en el Dock y foco. **Precio aceptado:** macOS te roba el teclado a media
-  frase si estabas en otra ventana, **una vez por sesión**. Se acepta porque lo que un permiso
-  compraría ya está comprado y gratis: medido, el agente **anuncia** antes de dibujar, 8 de 8
-  —*«Te lo dibujo en la pizarra»*, y llama—, y el consentimiento real está antes, en que el
-  usuario la pidió o pegó él la línea que la manda. Ver la pregunta abierta de §11.1.
-- **El foco se roba exactamente cuando la ventana nace o renace** —primer `show`, o primer
-  `show` tras haberla cerrado el usuario— y **nunca en una actualización**. Un `show` sobre
-  ventana abierta repinta en ~55 ms sin tocar el foco; saltar al frente cada vez que el agente
-  retoca, mientras el usuario escribe en la terminal, es intolerable.
+- **La ventana nace delante y sin tocar el teclado, y sin pedir permiso.** *Dock* y *foco*
+  parecían el mismo paquete, y son **dos llamadas distintas**: al primer `show` la app sube de
+  `Accessory` a `Regular` (`NSApplication.setActivationPolicy`), que es lo que le da el icono
+  del Dock, y la ventana se manda al frente con **`orderFrontRegardless`**, que mueve la
+  pantalla y no el foco. **El teclado se queda donde el usuario lo tenía.** Medido el
+  2026-09-04 (`docs/research/18-el-foco-que-no-se-roba.md`), y el permiso sigue sin pedirse,
+  que ahora cuesta todavía menos: lo que compraría ya está comprado y gratis —el agente
+  **anuncia** antes de dibujar, 8 de 8, *«Te lo dibujo en la pizarra»* y llama—, y el
+  consentimiento real está antes, en que el usuario la pidió o pegó él la línea que la manda.
+- **Son tres piezas y ninguna sobra**, que es lo que hace esto frágil y por lo que está
+  escrito aquí: (1) `with_activate_ignoring_other_apps(false)`, porque **`winit` roba el
+  teclado por su cuenta** al arrancar el event loop y sin desarmarlo lo demás no sirve de
+  nada; (2) mandar la ventana delante **sólo después del primer frame**, porque `eframe` crea
+  la suya oculta y la muestra él al pintar, y adelantarse la deja **detrás del terminal para
+  siempre**; (3) `orderFrontRegardless` en vez de `Visible(true)` + `Focus`. Las dos primeras
+  son detalles internos de las versiones que el repo pincha: **subir `eframe` obliga a volver
+  a medir esto**.
+- **La ventana se manda delante cuando nace o renace** —primer `show`, o primer `show` tras
+  haberla cerrado el usuario— y **nunca en una actualización**. Un `show` sobre ventana
+  abierta repinta en ~55 ms sin tocar nada; saltar al frente cada vez que el agente retoca,
+  mientras el usuario escribe en la terminal, es intolerable. Y como cualquier ventana de una
+  app que no está activa, **la Pizarra pasa detrás en cuanto el usuario activa su terminal**;
+  el siguiente `show` no la vuelve a traer.
 - **Cerrar la ventana oculta, no mata.** En `eframe` cerrar la ventana termina la aplicación,
   o sea que ⌘W se llevaría por delante el servidor MCP y dejaría al agente sin herramientas a
   media conversación. Y en macOS un event loop de `winit` **no se puede volver a arrancar** en
   el mismo proceso, así que esto no es preferencia sino obligación: si muriera, no habría
-  segunda ventana nunca.
+  segunda ventana nunca. **Precio aceptado:** la ventana nace sin el teclado, así que **⌘W no
+  le llega hasta que el usuario la clique** —y el ⌘W de reflejo se lo come el terminal, donde
+  puede cerrarle una pestaña—. Es el gesto normal de cualquier ventana sin foco, y se paga
+  sólo cuando alguien quiere cerrarla; el robo del teclado se pagaba siempre.
 - **El título lleva el directorio de trabajo de la sesión** — `Pizarra — ai-render` —, que es
   lo que el usuario tiene en la cabeza cuando mira dos terminales.
 
@@ -1045,8 +1060,8 @@ que **el host ya versiona por directorio y cuenta referencias por proceso**; y
 - **No hay Node, no hay Python, no hay navegador, no hay toolchain de Rust.**
 
 **Linux y Windows no se declaran imposibles: se declaran no probados y no prometidos.**
-`objc2-app-kit` es lo que consigue Dock y foco, y ahí *aparecer una vez, robar el foco y nunca
-más* hay que resolverlo de cero. Linux añade que **puede no haber pantalla** (SSH, contenedor,
+`objc2-app-kit` es lo que consigue el Dock y poner la ventana delante sin tocar el teclado, y
+ahí *aparecer una vez, quedarse delante y no volver a moverse* hay que resolverlo de cero. Linux añade que **puede no haber pantalla** (SSH, contenedor,
 WSL). Vuelven cuando el MVP exista.
 
 ---
@@ -1058,11 +1073,23 @@ WSL). Vuelven cuando el MVP exista.
 Ninguna bloquea empezar. Se contestan mejor con código o con el dibujo delante que en una
 conversación.
 
-1. **¿Se puede tener Dock sin robar el teclado?** Subir de `Accessory` a `Regular` da *Dock y
-   foco* como un paquete, pero son dos llamadas distintas: se puede mostrar la ventana sin
-   activar la app (**`orderFrontRegardless`** en vez de `makeKeyAndOrderFront`). Si funciona,
-   **desaparece el precio que acepta §6.2 sin pagar nada**; si no, la ventana aparece *detrás*
-   del terminal y el agente dice que ha dibujado mientras el usuario no ve nada, que es peor.
+1. ~~**¿Se puede tener Dock sin robar el teclado?**~~ **CERRADA el 2026-09-04: sí, y se
+   adopta.** Medido con la costura del §6.2 conmutable (`docs/research/18-el-foco-que-no-se-roba.md`,
+   arnés en el prototipo 25): la ventana sale **delante del terminal el 100 % del tiempo** con
+   el **teclado intacto**, en el primer `show` y en el renacer, 3 de 3 tiradas limpias, y el
+   icono del Dock se conserva. El precio del §6.2 desaparece del §11.4.
+
+   > **`orderFrontRegardless` a secas no habría bastado, y esa es la parte que había que
+   > medir.** El ladrón del teclado no era el `activate()` que esta pregunta sospechaba: es
+   > **`winit`**, que llama a `activateIgnoringOtherApps(true)` al arrancar el event loop. Sin
+   > desarmarlo, cambiar la llamada **no cambia nada** (roba igual, 3/3). Y desarmándolo pero
+   > mandando la ventana delante en cuanto llega el `show`, sale el desenlace *peor* que esta
+   > pregunta describía: la ventana **detrás del terminal y ahí se queda**, 3/3 — porque
+   > `eframe` crea su ventana oculta y la muestra él tras pintar el primer frame. Son tres
+   > piezas, están en el §6.2, y las dos nuevas viven en las tripas de versiones pinchadas.
+
+   Lo que sí se paga, escrito en el §6.2 y en el §11.4: **⌘W ya no le llega a la ventana**
+   hasta que el usuario la clique.
 2. ~~**Estructura de packages del repo.**~~ **CERRADA el 2026-09-03: un crate y un script de
    bash.** Un solo crate binario `flipchart` con módulos internos — `flipchart` (el estado y las
    Vistas), `server` (las dos herramientas de `rmcp`), `diagram` (la tubería de mmdr) y `mac`
@@ -1206,7 +1233,13 @@ y el aviso ya cierra el agujero sin tocar el peaje de cada llamada.
 - **Los grupos se entregan tal como mmdr los dibuje** (§3.5).
 - **Tras un `/clear` la ventana enseña el diagrama anterior** (§7).
 - **Volver atrás en el rotafolio es lineal y a ciegas** (§6.1).
-- **La primera ventana roba el foco**, una vez por sesión (§6.2, y §11.1 pregunta 1).
+- **⌘W no le llega a la ventana** hasta que el usuario la clique, porque nace sin el teclado
+  (§6.2). El ⌘W de reflejo se lo come el terminal.
+- **La Pizarra pasa detrás en cuanto el usuario activa su terminal**, y el siguiente `show` no
+  la vuelve a traer (§6.2).
+- **Subir `eframe` obliga a volver a medir cómo aparece la ventana** (§6.2): dos de las tres
+  piezas que la ponen delante sin robar el teclado son detalles internos de `eframe` 0.36.1 y
+  `winit` 0.30.13.
 - **Sin la línea del `CLAUDE.md`, la pizarra no se usa jamás** por iniciativa del agente (§8.1).
 - **La prohibición de píxeles es limpiada-y-avisada, no imposible** (§3.2).
 - **El aviso del marcado literal no llega a los canales laterales** (§4.4 d): mira las
