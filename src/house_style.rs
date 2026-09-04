@@ -17,10 +17,18 @@ const NOTES_NOT_DRAWN: &str =
 const DIRECTION_IMPOSED: &str = "Note: the flipchart lays diagrams out left to right; the direction in your source \
      was ignored. The view was drawn.";
 
+/// El cuarto dice lo mismo que el de `namespace` —no sabemos dibujarlo— sobre lo
+/// que viaja **dentro** del texto de la etiqueta, que es por donde el vaciado del
+/// §3.2 no pasa. Y nombra el único constructo que sí sale bien, porque es el que
+/// el agente usa en quince de diecisiete diagramas y retirárselo sería cobrarle
+/// por algo que funciona.
+const MARKUP_DRAWN_AS_TEXT: &str = "Note: only <br> is rendered inside labels; other tags, HTML entities and #-escapes \
+     reached the drawing as literal text. The view was drawn — write those labels as plain text.";
+
 /// Vacía el estilo del IR e impone la dirección, y devuelve los avisos **por lo
 /// que venía, no por lo que tuvo efecto**: un `classDef` que ninguna clase usaba
 /// también avisa, porque el agente creyó que estaba pintando. Nunca rechaza — los
-/// tres acompañan a una Vista que se dibuja.
+/// cuatro acompañan a una Vista que se dibuja.
 pub fn imposed_on(parsed: &mut ParseOutput, source: &str) -> Vec<&'static str> {
     let mut notes = Vec::new();
 
@@ -37,6 +45,9 @@ pub fn imposed_on(parsed: &mut ParseOutput, source: &str) -> Vec<&'static str> {
         if source_declared_another_direction(source) {
             notes.push(DIRECTION_IMPOSED);
         }
+    }
+    if any_label_carries_markup(&parsed.graph) {
+        notes.push(MARKUP_DRAWN_AS_TEXT);
     }
 
     notes
@@ -96,6 +107,86 @@ fn structure_mmdr_cannot_draw(source: &str) -> Vec<&'static str> {
         notes.push(NOTES_NOT_DRAWN);
     }
     notes
+}
+
+/// El único constructo de dentro de la etiqueta que mmdr interpreta es `<br>`
+/// —así, o `<br/>`—. Todo lo demás con forma de marcado aterriza en el dibujo tal
+/// como se escribió, y es basura visible que **nadie más puede corregir**: el
+/// agente es ciego y el usuario no lee el fuente.
+///
+/// La pregunta se le hace a las **etiquetas del IR** y no al fuente, que es donde
+/// ya no queda sintaxis de Mermaid que confundir con marcado: el `&` de `A & B`
+/// no es una entidad, y `-->` no es una etiqueta.
+fn any_label_carries_markup(graph: &Graph) -> bool {
+    labels(graph).any(reads_as_markup)
+}
+
+/// El texto que llega al dibujo en las dos familias que se prometen: el de los
+/// nodos, el de los grupos y el de las aristas.
+fn labels(graph: &Graph) -> impl Iterator<Item = &str> {
+    let nodes = graph.nodes.values().map(|node| node.label.as_str());
+    let groups = graph.subgraphs.iter().map(|group| group.label.as_str());
+    let edges = graph.edges.iter().flat_map(|edge| {
+        edge.label
+            .iter()
+            .chain(&edge.start_label)
+            .chain(&edge.end_label)
+            .map(String::as_str)
+    });
+    nodes.chain(groups).chain(edges)
+}
+
+fn reads_as_markup(label: &str) -> bool {
+    tag_openings(label).any(|opening| !opens_a_line_break(opening)) || carries_an_escape(label)
+}
+
+/// Lo que hay detrás de cada `<` que abre algo con forma de etiqueta. Un `<`
+/// pegado a otro `<` no abre nada: es una anotación `<<interface>>`, que es de
+/// Mermaid, que mmdr dibuja bien y que es lo más idiomático que tiene un
+/// diagrama de clases.
+fn tag_openings(label: &str) -> impl Iterator<Item = &str> {
+    label.match_indices('<').filter_map(|(at, angle)| {
+        let after = &label[at + angle.len()..];
+        let annotation = label[..at].ends_with('<') || after.starts_with('<');
+        (!annotation && looks_like_a_tag(after)).then_some(after)
+    })
+}
+
+/// `<`, una barra opcional, un nombre, y detrás el cierre, la barra o un
+/// atributo. `Map<String,Int>` no la tiene —la coma no es nombre—, y se dibuja
+/// tal cual, que es lo correcto.
+fn looks_like_a_tag(after_the_angle: &str) -> bool {
+    let name = after_the_angle.strip_prefix('/').unwrap_or(after_the_angle);
+    let Some(at) = name.find(|character: char| !character.is_ascii_alphanumeric()) else {
+        return false;
+    };
+    let rest = &name[at..];
+    at > 0 && (rest.starts_with(['>', '/']) || rest.starts_with(char::is_whitespace))
+}
+
+/// Los dos que mmdr interpreta, y son exactamente dos: medido, `<br />` con
+/// espacio, `<br  />` y `<BR/>` ya salen literales.
+fn opens_a_line_break(after_the_angle: &str) -> bool {
+    after_the_angle.starts_with("br>") || after_the_angle.starts_with("br/>")
+}
+
+/// Una entidad HTML (`&amp;`, `&#35;`) o un escape de los de Mermaid (`#quot;`,
+/// `#35;`). Los tres llegan al dibujo tal cual se escribieron.
+fn carries_an_escape(label: &str) -> bool {
+    label
+        .char_indices()
+        .filter(|(_, character)| matches!(character, '&' | '#'))
+        .any(|(at, sign)| names_an_escape(&label[at + sign.len_utf8()..]))
+}
+
+fn names_an_escape(after_the_sign: &str) -> bool {
+    let name = after_the_sign.strip_prefix('#').unwrap_or(after_the_sign);
+    name.find(';').is_some_and(|at| {
+        at > 0
+            && name[..at]
+                .chars()
+                .all(|character| character.is_ascii_alphanumeric())
+    })
 }
 
 /// mmdr **no distingue `flowchart TB` de `flowchart`** —el parser inicializa a
@@ -294,6 +385,137 @@ mod tests {
     #[test]
     fn el_namespace_fuera_del_diagrama_de_clases_no_se_avisa() {
         assert!(notes("flowchart LR\n  namespace --> B[Dos]\n").is_empty());
+    }
+
+    #[test]
+    fn el_salto_de_linea_que_mmdr_interpreta_no_avisa_de_nada() {
+        assert!(
+            notes("flowchart LR\n  store[\"storelua<br/>persistencia\"] --> marks[\"markslua<br>recolocacion\"]\n")
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn la_negrita_que_acaba_dibujada_como_texto_se_avisa() {
+        let avisos =
+            notes("flowchart LR\n  store[\"storelua\"] --> marks[\"<b>recolocacion</b>\"]\n");
+
+        assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT]);
+    }
+
+    #[test]
+    fn el_salto_de_linea_con_espacio_dentro_ya_sale_literal_y_se_avisa() {
+        let avisos = notes(
+            "flowchart LR\n  store[\"storelua<br />persistencia\"] --> marks[\"markslua\"]\n",
+        );
+
+        assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT]);
+    }
+
+    #[test]
+    fn el_salto_de_linea_en_mayusculas_tampoco_lo_interpreta_mmdr() {
+        let avisos =
+            notes("flowchart LR\n  store[\"storelua<BR/>persistencia\"] --> marks[\"markslua\"]\n");
+
+        assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT]);
+    }
+
+    #[test]
+    fn la_familia_entera_de_etiquetas_escapadas_avisa_igual() {
+        for etiqueta in [
+            "<i>uno</i>",
+            "<em>uno</em>",
+            "<strong>uno</strong>",
+            "<u>uno</u>",
+            "<code>uno</code>",
+            "<span style='color:red'>uno</span>",
+            "<a href='https://ejemplo'>uno</a>",
+            "<img src='x.png'/>uno",
+        ] {
+            let avisos = notes(&format!(
+                "flowchart LR\n  store[\"{etiqueta}\"] --> marks[\"markslua\"]\n"
+            ));
+
+            assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT], "falla con {etiqueta}");
+        }
+    }
+
+    #[test]
+    fn las_entidades_y_los_escapes_de_mermaid_llegan_como_texto_y_avisan() {
+        for etiqueta in [
+            "storelua &amp; marks",
+            "storelua&nbsp;persistencia",
+            "&lt;storelua&gt;",
+            "storelua &#35; persistencia",
+            "storelua #quot;persistencia#quot;",
+            "storelua #35; persistencia",
+        ] {
+            let avisos = notes(&format!(
+                "flowchart LR\n  store[\"{etiqueta}\"] --> marks[\"markslua\"]\n"
+            ));
+
+            assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT], "falla con {etiqueta}");
+        }
+    }
+
+    #[test]
+    fn los_caracteres_crudos_que_mmdr_escapa_bien_no_avisan() {
+        for etiqueta in [
+            "storelua & persistencia",
+            "storelua < persistencia",
+            "el 'storelua' de siempre",
+            "Map<String,Int>",
+        ] {
+            assert!(
+                notes(&format!(
+                    "flowchart LR\n  store[\"{etiqueta}\"] --> marks[\"markslua\"]\n"
+                ))
+                .is_empty(),
+                "avisa de más con {etiqueta}"
+            );
+        }
+    }
+
+    #[test]
+    fn la_anotacion_del_diagrama_de_clases_no_es_marcado() {
+        assert!(
+            notes(
+                "classDiagram\n  class Pedido {\n    <<interface>>\n    +confirmar() void\n  }\n"
+            )
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn el_marcado_de_la_etiqueta_de_una_arista_tambien_avisa() {
+        let avisos =
+            notes("flowchart LR\n  store[\"storelua\"] -->|\"<b>lee</b>\"| marks[\"markslua\"]\n");
+
+        assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT]);
+    }
+
+    #[test]
+    fn el_marcado_de_la_etiqueta_de_un_grupo_tambien_avisa() {
+        let avisos = notes(
+            "flowchart LR\n  subgraph capa[\"<b>Capa</b> de datos\"]\n    store[\"storelua\"]\n  \
+             end\n  store --> marks[\"markslua\"]\n",
+        );
+
+        assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT]);
+    }
+
+    #[test]
+    fn el_marcado_del_miembro_de_una_clase_tambien_avisa() {
+        let avisos = notes("classDiagram\n  class Pedido {\n    +<b>confirmar</b>() void\n  }\n");
+
+        assert_eq!(avisos, vec![MARKUP_DRAWN_AS_TEXT]);
+    }
+
+    #[test]
+    fn el_salto_de_linea_del_miembro_de_una_clase_sale_bien_y_no_avisa() {
+        assert!(
+            notes("classDiagram\n  class Pedido {\n    +confirmar()<br/>void\n  }\n").is_empty()
+        );
     }
 
     #[test]
