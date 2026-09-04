@@ -7,7 +7,7 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use eframe::egui;
 use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
 
-use crate::mac::take_the_focus;
+use crate::mac::bring_the_window_forward;
 use crate::raster::{Rasterizer, Rendered, Scale};
 
 /// Una hoja ya dibujada, tal como cruza. La numera quien la dibuja: un `show`
@@ -113,8 +113,15 @@ pub fn open_at_the_first_show(commands: Commands) {
         // medido, una app que nació accesoria no se activa nunca —ni cambiando
         // la política ni diez frames más tarde— y la ventana aparece detrás del
         // terminal mientras el agente dice que ha dibujado.
+        //
+        // Y hay que desarmar lo que `winit` hace por su cuenta al arrancar:
+        // `activateIgnoringOtherApps(true)`, que **roba el teclado a media
+        // frase** antes de que nadie más llegue a opinar. Es el ladrón de
+        // verdad — sin esta línea, poner la ventana delante sin activar la app
+        // no cambia nada.
         event_loop_builder: Some(Box::new(|builder| {
             builder.with_activation_policy(ActivationPolicy::Regular);
+            builder.with_activate_ignoring_other_apps(false);
         })),
         ..Default::default()
     };
@@ -347,13 +354,19 @@ const MINIMUM_ZOOM: f32 = 0.05;
 /// conversación— y en macOS un event loop de `winit` no se puede volver a
 /// arrancar, así que si muriera no habría segunda ventana nunca.
 ///
-/// El foco se roba cuando nace y cuando renace, y **nunca en una
+/// Se manda delante cuando nace y cuando renace, y **nunca en una
 /// actualización**: saltar al frente cada vez que el agente retoca, mientras el
 /// usuario escribe en la terminal, es intolerable.
+///
+/// **Nacer espera al primer frame.** `eframe` crea su ventana oculta y la
+/// muestra él, con `makeKeyAndOrderFront`, en cuanto ha pintado algo; mandarla
+/// delante antes de eso no sirve de nada —medido, se queda **detrás** del
+/// terminal y ahí se queda—. En el renacer no espera nada: la ventana ya pintó.
 #[derive(Debug, Default)]
 struct Window {
     open: bool,
     asked_for: bool,
+    painted: bool,
 }
 
 impl Window {
@@ -365,8 +378,21 @@ impl Window {
         self.open = false;
     }
 
+    fn a_frame_was_painted(&mut self) {
+        self.painted = true;
+    }
+
     fn born(&mut self) -> bool {
+        if !self.painted {
+            return false;
+        }
         std::mem::take(&mut self.asked_for) && !std::mem::replace(&mut self.open, true)
+    }
+
+    /// El `show` ya llegó y la ventana todavía no existe: hay que volver a
+    /// pasar por aquí en cuanto se haya pintado, o se queda detrás para siempre.
+    fn waiting_to_be_born(&self) -> bool {
+        self.asked_for && !self.painted
     }
 }
 
@@ -401,14 +427,15 @@ impl eframe::App for Viewer {
         }
 
         if self.window.born() {
-            ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
-            ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
-            take_the_focus();
+            bring_the_window_forward();
+        } else if self.window.waiting_to_be_born() {
+            ctx.request_repaint();
         }
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        self.window.a_frame_was_painted();
         self.collect(&ctx);
 
         egui::Frame::central_panel(ui.style()).show(ui, |ui| {
@@ -441,15 +468,14 @@ mod tests {
         let mut window = Window::default();
 
         window.a_show_arrived();
+        window.a_frame_was_painted();
 
         assert!(window.born());
     }
 
     #[test]
-    fn un_show_sobre_la_ventana_en_pie_no_le_vuelve_a_robar_el_foco() {
+    fn el_primer_show_no_manda_delante_una_ventana_que_todavia_no_ha_pintado() {
         let mut window = Window::default();
-        window.a_show_arrived();
-        window.born();
 
         window.a_show_arrived();
 
@@ -457,7 +483,33 @@ mod tests {
     }
 
     #[test]
-    fn tras_un_cmd_w_el_siguiente_show_hace_renacer_la_ventana_y_ahi_si_roba_el_foco() {
+    fn el_show_que_llego_antes_del_primer_frame_se_queda_pendiente() {
+        let mut window = Window::default();
+
+        window.a_show_arrived();
+        window.born();
+
+        assert!(window.waiting_to_be_born());
+    }
+
+    #[test]
+    fn una_ventana_ya_delante_no_deja_nada_pendiente() {
+        let window = nacida();
+
+        assert!(!window.waiting_to_be_born());
+    }
+
+    #[test]
+    fn un_show_sobre_la_ventana_en_pie_no_la_vuelve_a_mandar_delante() {
+        let mut window = nacida();
+
+        window.a_show_arrived();
+
+        assert!(!window.born());
+    }
+
+    #[test]
+    fn tras_un_cmd_w_el_siguiente_show_hace_renacer_la_ventana_y_ahi_si_va_delante() {
         let mut window = nacida();
 
         window.hidden();
@@ -478,6 +530,7 @@ mod tests {
     fn nacida() -> Window {
         let mut window = Window::default();
         window.a_show_arrived();
+        window.a_frame_was_painted();
         window.born();
         window
     }
