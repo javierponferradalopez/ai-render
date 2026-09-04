@@ -160,8 +160,11 @@ porque Info-ZIP guarda las fechas de modificación de lo que empaqueta. No impor
 
 ## Lo que no se ha medido
 
-- **El umbral de macOS** (§10.7). Compila y corre en 26.6.2; qué versión mínima exigen
-  `eframe`/`winit` sigue sin saberse, y no lo dice el build.
+- ~~**El umbral de macOS** (§10.7)~~. **Sí lo dice el build, y se midió el mismo día**:
+  `minos 11.0` en la rebanada `arm64` y `10.12` en la `x86_64`, sin ninguna API weak-linked
+  que pudiera subirlo por detrás
+  ([research 20](./20-la-instalacion-y-la-linea-verificadas.md) §2). Lo que sigue sin medirse
+  es **correrlo** en algo anterior al 26.6.2.
 - **La mitad x86_64 corriendo.** Está firmada y es un Mach-O válido, pero aquí no hay Mac
   Intel: lo que se ha comprobado es la firma de su rebanada, no su ejecución.
 - **El caudal**, que se hereda de research 11 (25,7–27,9 MB/s desde el CDN de GitHub) y no
