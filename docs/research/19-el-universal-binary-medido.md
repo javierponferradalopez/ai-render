@@ -5,7 +5,8 @@ punto 4 —el último— de la checklist del primer día de `DECISIONS.md` §11.
 número real del universal binary **antes** de escribir el `marketplace.json`.
 
 **Cabe de sobra, y por dos órdenes de magnitud: el universal firmado son 49,2 MB y el zip
-que se publica 18,7 MB, contra un tope de archive de 256 MiB.** El margen es de **14×** en
+que se publica 18,7 MB, contra un tope de archive de 256 MiB.** Y con el número delante se
+publicó `v0.1.0`, que instala y arranca (§5). El margen es de **14×** en
 tamaño y de **~165×** en plazo con el caudal ya medido del CDN. La referencia del ticket
 —6,9 MB de mmdr suelto— se multiplica por **3,4** al enlazar `eframe` + `winit` + `resvg`
 + `rmcp` en una arquitectura, y por **7,1** en dos.
@@ -109,11 +110,56 @@ drwxr-xr-x  3.0 unx        0 b- stor .claude-plugin/
 **`-rwxr-xr-x`** sobre el binario y sobre el Lanzador es de dónde sale el `100755` que
 research 15 midió en la máquina del usuario. Los cuatro ficheros y nada más.
 
+## 5. El release de verdad, instalado
+
+**Ejecutado el mismo día**, con `v0.1.0` publicado por la CI —los doce pasos en verde— y
+verificado desde el cliente contra un `CLAUDE_CONFIG_DIR` aislado. Banco: Claude Code
+2.1.228, macOS 26.6.2 arm64.
+
+| Medida | Valor |
+|---|---|
+| El catálogo por `raw.githubusercontent.com` sobre `main` | 701 bytes, servido |
+| El asset, y su digest careado contra el declarado | 18 683 644 bytes, **casan** |
+| `plugin marketplace add` + ficheros `.git` en el cliente | **NINGUNO** |
+| `plugin install flipchart@flipchart` | **✔ 5,5 s** |
+| El binario extraído | `plugins/cache/flipchart/flipchart/0.1.0/flipchart` |
+| Modo, y bytes | **`100755`**, 49 215 680 — el universal entero |
+| `xattr -l` / cuarentena | `com.apple.provenance` y nada más / **NINGUNA** |
+| Firma y arquitecturas | `Mach-O universal (x86_64 arm64)`, `Signature=adhoc` |
+| La tubería entera desde el binario extraído | `flipchart check` → `drawn`, `2 nodes, 1 edge`, `rc=0` |
+
+**Y lo que research 15 dejó explícitamente sin medir: el Servidor MCP de verdad, hablando
+desde la caja extraída.** Su sonda era bash pelado y no completaba el handshake nunca. El
+binario sí:
+
+```json
+{"protocolVersion":"2025-06-18","capabilities":{"tools":{}},
+ "serverInfo":{"name":"flipchart","version":"0.1.0"}}
+```
+
+`tools/list` devuelve **`show` y `clear`** —no el `unavailable` del Servidor de aviso—, así
+que el Lanzador le cedió el sitio y su stderr salió vacío.
+
+**Arrancado por el host, y aquí está el número que importa:**
+
+```
+MCP server "plugin:flipchart:flipchart": Successfully connected (transport: stdio) in 31ms
+Connection established with capabilities: {"hasTools":true,…,"serverVersion":{"name":"flipchart","version":"0.1.0"}}
+```
+
+**31 ms contra el plazo de 30 000 ms** del §10.4 — margen de ~970×. Es el plazo cuyo
+incumplimiento veta el servidor 15 minutos, y el que justifica que el Lanzador exista.
+
+De propina, la cuenta del disco: **47 MB** el `CLAUDE_CONFIG_DIR` con una versión dentro,
+que confirma por lo alto el pico de ~98 MB estimado en §2 para las dos.
+
+**Un aviso para quien caree los números:** el zip que publicó la CI son 18 683 644 bytes y
+el del §1 —empaquetado en local— 18 684 362. El zip **no es reproducible byte a byte**,
+porque Info-ZIP guarda las fechas de modificación de lo que empaqueta. No importa: el
+`sha256` lo calcula `catalogo.sh` sobre el zip exacto que se publica, en el mismo job.
+
 ## Lo que no se ha medido
 
-- **Un release de verdad.** Todo esto es local: el `marketplace.json` generado no está
-  publicado, no hay asset subido y nadie ha corrido `/plugin install` contra él. Es lo
-  último que le queda a [#44][44] y lo único que no se puede hacer sin empujar un tag.
 - **El umbral de macOS** (§10.7). Compila y corre en 26.6.2; qué versión mínima exigen
   `eframe`/`winit` sigue sin saberse, y no lo dice el build.
 - **La mitad x86_64 corriendo.** Está firmada y es un Mach-O válido, pero aquí no hay Mac
