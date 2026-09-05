@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "fat": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/launcher.sh",
-      "args": [],
-      "env": {"FAT_LOG": "${CLAUDE_PLUGIN_DATA}/fat.log"}
-    }
-  }
-}

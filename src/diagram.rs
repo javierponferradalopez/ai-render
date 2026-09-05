@@ -187,13 +187,11 @@ mod tests {
 
     const DOS_NODOS: &str = "flowchart TD\n  A[Uno] --> B[Dos]\n";
 
-    /// El caso protagonista del prototipo 13/20: cuatro grupos y siete aristas.
+    /// El **caso protagonista**, que es entender un refactor antes de hacerlo:
+    /// cuatro grupos y siete aristas.
     fn arch() -> String {
-        std::fs::read_to_string(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/docs/research/prototipos/13-mmdr-frente-a-termaid/arch.mmd"
-        ))
-        .expect("el caso protagonista está en el repo")
+        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/casos/arch.mmd"))
+            .expect("el caso protagonista está en el repo")
     }
 
     #[test]

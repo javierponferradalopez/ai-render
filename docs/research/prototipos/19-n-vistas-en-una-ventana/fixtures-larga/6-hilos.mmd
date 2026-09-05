@@ -1,7 +1,0 @@
-flowchart TB
-  subgraph proceso["Proceso de la pizarra"]
-    principal["hilo principal: Visor"]
-    servidor["hilo servidor: Servidor MCP"]
-  end
-  servidor -->|SVG| principal
-  servidor -->|decide la salida| fin["exit"]

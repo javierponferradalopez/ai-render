@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "toy": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/launcher.sh",
-      "args": ["--root", "${CLAUDE_PLUGIN_ROOT}", "--data", "${CLAUDE_PLUGIN_DATA}"]
-    }
-  }
-}

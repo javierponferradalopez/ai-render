@@ -200,11 +200,9 @@ mod tests {
 
     #[test]
     fn el_caso_protagonista_no_es_un_falso_positivo() {
-        let arch = std::fs::read_to_string(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/docs/research/prototipos/13-mmdr-frente-a-termaid/arch.mmd"
-        ))
-        .expect("el caso protagonista está en el repo");
+        let arch =
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/casos/arch.mmd"))
+                .expect("el caso protagonista está en el repo");
 
         assert_eq!(reglas(&arch), None);
     }

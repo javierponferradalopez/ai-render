@@ -1,8 +1,0 @@
-bench/target/
-contraste/node_modules/
-contraste/package.json
-contraste/package-lock.json
-out/
-out-fam/
-out-probe/
-out-permisivo/
