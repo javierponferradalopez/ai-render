@@ -125,7 +125,11 @@ impl Flipchart {
             .map(|(position, _)| position)
     }
 
-    pub fn view(&self, view_id: &str) -> Option<&str> {
+    /// Only the tests read a View back: the flipchart hands the whole deck to
+    /// the Viewer and answers the agent in prose, so nobody in production asks
+    /// it for one View's source.
+    #[cfg(test)]
+    fn view(&self, view_id: &str) -> Option<&str> {
         self.views
             .iter()
             .find(|view| view.id == view_id)

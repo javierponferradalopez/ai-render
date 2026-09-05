@@ -5,8 +5,10 @@ use mermaid_rs_renderer::{
     parse_mermaid_strict, render_svg,
 };
 
-use crate::honest_limit::undeclared_nodes;
-use crate::house_style;
+mod honest_limit;
+mod house_style;
+
+use self::honest_limit::undeclared_nodes;
 
 #[derive(Debug)]
 pub struct Drawing {

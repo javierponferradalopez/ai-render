@@ -4,7 +4,9 @@ use eframe::egui;
 use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
 
 use crate::mac::bring_the_window_forward;
-use crate::raster::{Rasterizer, Rendered, Scale};
+mod raster;
+
+use self::raster::{Rasterizer, Rendered, Scale};
 use crate::wire::{Command, Commands, DeckSnapshot};
 
 /// Deferred start: the main thread stays on the channel and does not create the

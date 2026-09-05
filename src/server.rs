@@ -7,8 +7,11 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 use tokio::signal::unix::{SignalKind, signal};
 
-use crate::flipchart::Flipchart;
-use crate::lifecycle::the_session_is_over;
+mod flipchart;
+mod lifecycle;
+
+use self::flipchart::Flipchart;
+use self::lifecycle::the_session_is_over;
 use crate::wire::Wire;
 
 #[derive(Deserialize, JsonSchema)]
