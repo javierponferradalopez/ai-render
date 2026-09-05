@@ -1,0 +1,112 @@
+name: publishing
+
+# The six steps of ADR-0013, triggered by the tag and by nothing else: the
+# `marketplace.json` is generated from the tag and never edited by hand, because
+# `/plugin update` downloads the whole zip *before* comparing identities and a
+# fix published without bumping the version gets downloaded, thrown away and
+# never mentioned.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      # Whole history, not the tag's: the last step commits the catalog on
+      # `main`, and pushing from a shallow clone is one of the things the server
+      # can reject.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: Swatinem/rust-cache@v2
+
+      # The same gate as every commit's CI. A tag does not skip it: among what
+      # `make verify` runs is that the box manifest declares the crate version,
+      # which is the one the tag has to repeat.
+      - run: make verify
+
+      - name: build both architectures
+        run: |
+          cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+
+      - name: lipo
+        run: |
+          lipo -create -output "$RUNNER_TEMP/flipchart" \
+            target/aarch64-apple-darwin/release/flipchart \
+            target/x86_64-apple-darwin/release/flipchart
+          lipo -info "$RUNNER_TEMP/flipchart"
+
+      # On Apple Silicon every executable needs at least an ad-hoc signature to
+      # run. Rust generates it on build, but **only on the native half**: the
+      # cross-compiled x86_64 comes out unsigned, and `lipo` preserves the
+      # asymmetry.
+      #
+      # Measured, and this is the trap: on the half-signed universal binary
+      # `codesign -dv` answers `Signature=adhoc` —it reads the native slice— and
+      # the binary runs on this runner. The one who notices is `--verify`, which
+      # looks at both. Without this step the product would break only on Intel
+      # Macs, which is where nobody tests it.
+      #
+      # No notarisation: measured that the binary extracted from the zip does
+      # not carry `com.apple.quarantine`, so running it does not consult
+      # Gatekeeper.
+      - name: re-sign ad-hoc and verify the signature covers both slices
+        run: |
+          codesign -s - -f "$RUNNER_TEMP/flipchart"
+          codesign --verify --verbose=2 "$RUNNER_TEMP/flipchart"
+          for arch in arm64 x86_64; do
+            codesign -dv --arch "$arch" "$RUNNER_TEMP/flipchart" 2>&1 \
+              | grep -qx 'Signature=adhoc' \
+              || { echo "the $arch slice was left unsigned ad-hoc"; exit 1; }
+          done
+          ls -l "$RUNNER_TEMP/flipchart"
+
+      - name: package with Info-ZIP and compute the sha256
+        run: |
+          zip=$(publishing/package.sh \
+            "$GITHUB_REF_NAME" "$RUNNER_TEMP/flipchart" "$RUNNER_TEMP")
+          echo "ZIP=$zip" >> "$GITHUB_ENV"
+
+      - name: generate the catalog from the tag
+        run: |
+          publishing/catalog.sh "$GITHUB_REF_NAME" "$ZIP" > "$RUNNER_TEMP/marketplace.json"
+          cat "$RUNNER_TEMP/marketplace.json"
+
+      # The asset comes before the catalog: the catalog published on `main` is
+      # the URL the user has typed in, so it cannot point for even a second at
+      # an asset that does not exist yet.
+      - name: the zip as a release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$ZIP" \
+            --title "$GITHUB_REF_NAME" \
+            --notes 'Installed through `/plugin`, with the two lines from the README. Nothing to download by hand.'
+
+      # Measured: the freshly uploaded asset takes a moment to become servable,
+      # and a race 404 reads as if the catalog entry were bad.
+      - name: wait for the asset to be served
+        run: |
+          url=$(sed -n 's/.*"url": "\(.*\)".*/\1/p' "$RUNNER_TEMP/marketplace.json")
+          for _ in $(seq 12); do
+            curl -fsIL -o /dev/null "$url" && exit 0
+            sleep 5
+          done
+          echo "the asset is still not being served: $url"
+          exit 1
+
+      - name: commit the catalog on main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git checkout -B main origin/main
+          cp "$RUNNER_TEMP/marketplace.json" marketplace.json
+          git add marketplace.json
+          git commit -m "chore(publishing): the catalog points at $GITHUB_REF_NAME"
+          git push origin main

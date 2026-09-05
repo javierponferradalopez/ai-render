@@ -1,4 +1,4 @@
-name: verificación
+name: verification
 
 on:
   push:

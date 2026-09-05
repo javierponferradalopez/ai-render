@@ -50,7 +50,7 @@ for testing this: it has to be really hosted.**
 ## The shape of the zip, and versioning
 
 Inside the zip: **`.claude-plugin/plugin.json`, `.mcp.json`, the Launcher and the binary.**
-Both JSONs are versioned under `publicacion/caja/`; the Launcher is the repo's `launcher.sh`,
+Both JSONs are versioned under `publishing/box/`; the Launcher is the repo's `launcher.sh`,
 the same one the tests run.
 
 - **It is packed with Info-ZIP** (`zip`), which produces `version made by == 3` (Unix) with
@@ -93,12 +93,12 @@ the catalog — **a private or authenticated asset is impossible by this route**
 6. Generate the `marketplace.json` from the tag, upload the zip as a release asset and commit
    the JSON to `main`.
 
-The six steps live in `.github/workflows/publicacion.yml`, triggered by the tag and by
+The six steps live in `.github/workflows/publishing.yml`, triggered by the tag and by
 nothing else. The two with rules of their own are separate scripts, which is why they can be
-tested without publishing anything: `publicacion/empaqueta.sh` builds the box and closes it
+tested without publishing anything: `publishing/package.sh` builds the box and closes it
 —copying the four files one by one, so there is nowhere to slip a fifth in— and
-`publicacion/catalogo.sh` generates the catalog from the tag. Both **refuse** if the tag's
-version is not the one declared by the manifest they are about to publish; `tests/caja.rs` is
+`publishing/catalog.sh` generates the catalog from the tag. Both **refuse** if the tag's
+version is not the one declared by the manifest they are about to publish; `tests/box.rs` is
 what has that measured on every `make verify`.
 
 **Never document "download the zip by hand"**: whoever downloads with a browser or Mail gets
