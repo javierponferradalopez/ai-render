@@ -9,7 +9,7 @@ use tokio::signal::unix::{SignalKind, signal};
 
 use crate::flipchart::Flipchart;
 use crate::lifecycle::the_session_is_over;
-use crate::viewer::Wire;
+use crate::wire::Wire;
 
 #[derive(Deserialize, JsonSchema)]
 pub struct ShowParams {

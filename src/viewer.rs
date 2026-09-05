@@ -1,104 +1,11 @@
 //! The Viewer: the flipchart that shows the sheet the agent put at the front.
 
-use std::sync::Arc;
-use std::sync::OnceLock;
-use std::sync::mpsc::{Receiver, Sender, channel};
-
 use eframe::egui;
 use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
 
 use crate::mac::bring_the_window_forward;
 use crate::raster::{Rasterizer, Rendered, Scale};
-
-/// An already drawn sheet, exactly as it arrives. Whoever draws it numbers it:
-/// a `show` over an id that already existed gives a new sheet with the same
-/// name.
-#[derive(Debug)]
-pub struct Drawn {
-    pub number: u64,
-    pub id: String,
-    pub svg: String,
-}
-
-/// The whole flipchart every time: the sheets **in creation order** and **which
-/// one is at the front**. The Viewer decides neither of those two things.
-#[derive(Debug)]
-pub struct DeckSnapshot {
-    pub sheets: Vec<Drawn>,
-    pub front: Option<usize>,
-}
-
-/// What the server sends the Viewer: draw the whole flipchart, or say goodbye —
-/// which happens once and is the last thing to come across.
-#[derive(Debug)]
-pub enum Command {
-    Show(DeckSnapshot),
-    SessionOver,
-}
-
-/// The in-memory channel from the server to the Viewer. It is more than a
-/// `Sender`: it wakes the event loop, which macOS does not slow down but
-/// **stops** when the window is covered — and covered is the normal case, with
-/// the user in their terminal.
-#[derive(Debug, Clone)]
-pub struct Wire {
-    commands: Sender<Command>,
-    awake: Waker,
-}
-
-impl Wire {
-    pub fn send(&self, snapshot: DeckSnapshot) {
-        self.tell(Command::Show(snapshot));
-    }
-
-    /// The Viewer's goodbye, sent by the server thread because it is the only
-    /// one that knows what time it is. It says whether there was a window to
-    /// say goodbye to: a session that never drew anything has nobody to tell.
-    pub fn say_goodbye(&self) -> bool {
-        self.tell(Command::SessionOver);
-        self.awake.get().is_some()
-    }
-
-    fn tell(&self, command: Command) {
-        let _ = self.commands.send(command);
-        if let Some(ctx) = self.awake.get() {
-            ctx.request_repaint();
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Commands {
-    commands: Receiver<Command>,
-    awake: Waker,
-}
-
-impl Commands {
-    pub(crate) fn recv(&self) -> Option<Command> {
-        self.commands.recv().ok()
-    }
-
-    pub(crate) fn try_recv(&self) -> Option<Command> {
-        self.commands.try_recv().ok()
-    }
-}
-
-type Waker = Arc<OnceLock<egui::Context>>;
-
-pub fn wire() -> (Wire, Commands) {
-    let (commands, pending) = channel();
-    let awake: Waker = Arc::default();
-    (
-        Wire {
-            commands,
-            awake: awake.clone(),
-        },
-        Commands {
-            commands: pending,
-            awake,
-        },
-    )
-}
+use crate::wire::{Command, Commands, DeckSnapshot};
 
 /// Deferred start: the main thread stays on the channel and does not create the
 /// event loop —nor the 97 MB it costs— until the agent asks for the first
@@ -247,7 +154,7 @@ struct Viewer {
 
 impl Viewer {
     fn new(cc: &eframe::CreationContext<'_>, commands: Commands, first: DeckSnapshot) -> Self {
-        let _ = commands.awake.set(cc.egui_ctx.clone());
+        commands.this_is_where_to_wake_me(cc.egui_ctx.clone());
         let mut viewer = Self {
             commands,
             rasterizer: Rasterizer::spawn(cc.egui_ctx.clone()),
@@ -467,6 +374,7 @@ impl eframe::App for Viewer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wire::{Drawn, wire};
 
     #[test]
     fn the_window_is_born_with_the_first_show() {

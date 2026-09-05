@@ -11,7 +11,7 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crate::viewer::Wire;
+use crate::wire::Wire;
 
 /// The goodbye: just enough for whoever was watching on the second monitor to
 /// learn why the window is disappearing. Leaving it on screen would turn the
@@ -28,7 +28,7 @@ pub fn the_session_is_over(viewer: &Wire) -> ! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::viewer::wire;
+    use crate::wire::wire;
 
     #[test]
     fn the_goodbye_lasts_between_two_and_three_seconds() {

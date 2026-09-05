@@ -1,5 +1,5 @@
 use crate::diagram::{self, Rejection};
-use crate::viewer::{DeckSnapshot, Drawn, Wire};
+use crate::wire::{DeckSnapshot, Drawn, Wire};
 
 const MAX_VIEW_ID_CHARS: usize = 64;
 
@@ -163,7 +163,7 @@ impl Flipchart {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::viewer::{Command, Commands, wire};
+    use crate::wire::{Command, Commands, wire};
 
     const TWO_NODES: &str = "flowchart LR\n  A[One] --> B[Two]\n";
     const THREE_NODES: &str = "flowchart LR\n  A[One] --> B[Two]\n  B --> C[Three]\n";
