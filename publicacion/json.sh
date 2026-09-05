@@ -3,7 +3,7 @@
 # Vale para el `plugin.json` y sólo para él: es un fichero versionado que
 # escribimos nosotros, con una clave por línea y sin un `"` ni un `\` dentro de
 # ningún valor. `catalogo.sh` comprueba esa premisa antes de apoyarse en ella,
-# y `jq` no está aquí por la misma razón que no está en el Lanzador (§10.5).
+# y `jq` no está aquí por la misma razón que no está en el Lanzador (ADR-0014).
 
 campo() {
   local resto=${2#*\"$1\"}

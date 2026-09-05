@@ -86,7 +86,7 @@ impl Rejection {
 }
 
 /// Los de fábrica, sin tocar: ninguna perilla de mmdr mejora el dibujo y varias
-/// hacen daño. Medido en DECISIONS §3.4.
+/// hacen daño. Medido en el ADR-0003.
 fn theme() -> Theme {
     Theme::mermaid_default()
 }

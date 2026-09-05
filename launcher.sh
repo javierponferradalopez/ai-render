@@ -1,6 +1,6 @@
 #!/bin/bash
 # El Lanzador — y, cuando no hay Proceso de la pizarra al que cederle el sitio,
-# el Servidor de aviso (DECISIONS §10.4, §10.5).
+# el Servidor de aviso (docs/adr/0014-the-launcher-never-fails.md).
 #
 # La restricción es de primer nivel: nunca falla. Contesta al handshake siempre,
 # en milisegundos, haya binario o no, y sale con 0. El motivo no es el plazo de

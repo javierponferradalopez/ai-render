@@ -1,6 +1,6 @@
 name: publicación
 
-# Los seis pasos del §10.3, disparados por el tag y por nada más: el
+# Los seis pasos del ADR-0013, disparados por el tag y por nada más: el
 # `marketplace.json` se genera desde el tag y nunca se edita a mano, porque
 # `/plugin update` descarga el zip entero *antes* de comparar identidades y un
 # arreglo publicado sin subir la versión se baja, se tira y no avisa.

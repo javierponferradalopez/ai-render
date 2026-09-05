@@ -114,6 +114,7 @@ descubras chocándote.
 
 ## Desarrollo
 
-Las decisiones del producto están en [`DECISIONS.md`](./DECISIONS.md), el idioma del
-dominio en [`CONTEXT.md`](./CONTEXT.md), y lo medido en [`docs/research/`](./docs/research/).
-Cómo se construye y cuál es la puerta, en [`CLAUDE.md`](./CLAUDE.md).
+Las decisiones del producto están en [`docs/adr/`](./docs/adr/) —una por fichero, con lo
+medido detrás de cada una— y el idioma del dominio en [`CONTEXT.md`](./CONTEXT.md). Los dos
+están en inglés, que es el idioma de todo lo que lee un modelo. Cómo se construye y cuál es
+la puerta, en [`CLAUDE.md`](./CLAUDE.md).

@@ -18,10 +18,10 @@ const DIRECTION_IMPOSED: &str = "Note: the flipchart lays diagrams out left to r
      was ignored. The view was drawn.";
 
 /// El cuarto dice lo mismo que el de `namespace` —no sabemos dibujarlo— sobre lo
-/// que viaja **dentro** del texto de la etiqueta, que es por donde el vaciado del
-/// §3.2 no pasa. Y nombra el único constructo que sí sale bien, porque es el que
-/// el agente usa en quince de diecisiete diagramas y retirárselo sería cobrarle
-/// por algo que funciona.
+/// que viaja **dentro** del texto de la etiqueta, que es por donde el vaciado de
+/// los nueve canales no pasa. Y nombra el único constructo que sí sale bien,
+/// porque es el que el agente usa en quince de diecisiete diagramas y
+/// retirárselo sería cobrarle por algo que funciona.
 const MARKUP_DRAWN_AS_TEXT: &str = "Note: only <br> is rendered inside labels; other tags, HTML entities and #-escapes \
      reached the drawing as literal text. The view was drawn — write those labels as plain text.";
 
@@ -53,7 +53,7 @@ pub fn imposed_on(parsed: &mut ParseOutput, source: &str) -> Vec<&'static str> {
     notes
 }
 
-/// Los nueve canales del §3.2. Se miran en el IR y no en el texto: por muchas
+/// Los nueve canales del ADR-0006. Se miran en el IR y no en el texto: por muchas
 /// formas nuevas de escribir estilo que Mermaid invente, para tener efecto tienen
 /// que aterrizar aquí.
 fn style_came_in(parsed: &ParseOutput) -> bool {

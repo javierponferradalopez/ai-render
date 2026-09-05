@@ -1,5 +1,5 @@
 #!/bin/bash
-# Empaqueta la caja: los cuatro ficheros del §10.2 y nada más, en un zip de
+# Empaqueta la caja: los cuatro ficheros del ADR-0013 y nada más, en un zip de
 # Info-ZIP, y escribe en stdout la ruta del zip.
 #
 #   empaqueta.sh <version-o-tag> <binario> <destino>
@@ -50,7 +50,7 @@ del_cargo=$(la_version_del_cargo_toml)
 
 # Los cuatro ficheros se copian uno a uno y no hay un `cp -R` de un directorio
 # entero, que es lo que dejaría entrar un `.DS_Store` del árbol de trabajo o un
-# `skills/` que alguien añadiese de paso. La caja del §10.2 es cerrada, así que
+# `skills/` que alguien añadiese de paso. La caja del ADR-0013 es cerrada, así que
 # no hace falta comprobar que lo es: no hay por dónde meter un quinto fichero.
 readonly CAJA="$DESTINO/caja"
 rm -rf "$CAJA"

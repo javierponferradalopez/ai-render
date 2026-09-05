@@ -110,7 +110,7 @@ fn el_servidor_expone_show_y_clear_y_nada_mas() {
 }
 
 #[test]
-fn show_lleva_la_descripcion_literal_del_5_3() {
+fn show_lleva_el_literal_de_la_descripcion() {
     let mut sesion = Sesion::abierta();
 
     let show = herramienta(&sesion.herramientas(), "show").clone();
@@ -128,7 +128,7 @@ fn show_lleva_la_descripcion_literal_del_5_3() {
 }
 
 #[test]
-fn clear_lleva_la_descripcion_literal_del_5_3() {
+fn clear_lleva_el_literal_de_la_descripcion() {
     let mut sesion = Sesion::abierta();
 
     let clear = herramienta(&sesion.herramientas(), "clear").clone();
