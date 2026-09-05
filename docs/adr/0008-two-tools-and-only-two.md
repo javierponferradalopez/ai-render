@@ -71,7 +71,7 @@ It speaks to an agent that **has already decided to call**, not to one that need
 convincing — and with that bar, *when* to use the flipchart falls out of it on its own: it
 moves to the project instructions line (ADR-0012), which is the only channel that works.
 
-**The literal text lives in `tests/protocolo_mcp.rs`**, string by string, which is its
+**The literal text lives in `tests/mcp_protocol.rs`**, string by string, which is its
 source. Why each piece is in it:
 
 - **What it does and what it takes.** Mandatory.
