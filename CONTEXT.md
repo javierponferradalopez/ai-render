@@ -83,7 +83,7 @@ _Why_: [0015](./docs/adr/0015-what-this-product-is-not.md)
 
 ### The honest limit
 
-**Honest limit** — `honest_limit.rs` in code:
+**Honest limit** — `diagram/honest_limit.rs` in code:
 The boundary the flipchart does not cross by drawing: past it, it does not draw worse,
 it stops and says so. **What is seen in excess is rejected; what is seen short is drawn
 and warned about.**
@@ -125,6 +125,14 @@ _Avoid_: backend, host — the Host is the program that launches us
 The role that receives a scene and paints it in its own window. Dumb by design: it keeps
 nothing, and closing its window loses nothing.
 _Avoid_: frontend, client, app, page
+
+**Wire** — `wire.rs` in code:
+The in-memory channel the MCP server hands the deck over on, and the only thing the two
+threads share. It is more than a `Sender`: it also wakes the event loop, which macOS
+stops —not slows— while the window is covered. Whoever holds it needs to know nothing
+about the Viewer, which is why the Viewer depends on nobody.
+_Avoid_: channel — that is the Flipchart as a whole; also bus, queue, IPC, socket
+_Why_: [0001](./docs/adr/0001-one-process-two-threads-no-ipc.md)
 
 **Launcher** — `launcher.sh` in code:
 What the Host invokes so that the Flipchart process exists. It does not bring the

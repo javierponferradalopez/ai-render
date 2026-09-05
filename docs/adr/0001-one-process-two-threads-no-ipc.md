@@ -66,6 +66,19 @@ the other side. The package also carries a library target, which is how the inte
 tests get in; what is delivered is still **one single file**, and no piece may become a
 second versioned artifact that has to match versions with the first.
 
+**How those modules are ordered among themselves: a module with a single consumer lives
+inside it and is private; it rises to the root when a second one uses it.** So
+`honest_limit` and `house_style` sit under `diagram`, `raster` under `viewer`, and
+`flipchart` and `lifecycle` under `server` — while `mac` stays at the root, because the
+Viewer and the startup both call into it, and one single border with the operating system
+beats three. What the root shows is therefore the entry points and nothing else, and the
+tree says out loud the same hierarchy the code already had.
+
+The `wire` is the exception that proves it: four consumers, so the root is its place. Being
+there is what lets `flipchart` hand the deck over without importing from `viewer`, and
+leaves the Viewer a leaf of the graph — dumb by design, as the glossary claims and the
+module tree now backs up.
+
 ## Considered options
 
 - **Two processes with IPC** — rejected. A socket, an internal protocol, a handshake
