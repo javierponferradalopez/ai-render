@@ -18,21 +18,21 @@ pub fn stay_out_of_the_dock(main_thread: MainThreadMarker) {
         .setActivationPolicy(NSApplicationActivationPolicy::Accessory);
 }
 
-/// Pone la ventana delante **sin activar la app**, que es lo que deja el
-/// teclado donde estaba: donde el usuario lo tenía. *Dock* y *foco* venían en
-/// el mismo paquete —subir a `Regular` y `activate()`—, pero son dos llamadas
-/// distintas, y ésta es la que sólo mueve la pantalla.
+/// Puts the window in front **without activating the app**, which is what
+/// leaves the keyboard where it was: where the user had it. *Dock* and *focus*
+/// came in the same package —moving up to `Regular` and `activate()`—, but they
+/// are two distinct calls, and this is the one that only moves the screen.
 ///
-/// Sólo agarra sobre una ventana que el sistema ya tiene montada: llamada antes
-/// del primer frame, la ventana se queda **detrás** del terminal. Quién espera
-/// a ese frame es el Visor.
+/// It only takes hold on a window the system already has mounted: called before
+/// the first frame, the window stays **behind** the terminal. The one who waits
+/// for that frame is the Viewer.
 pub fn bring_the_window_forward() {
     if let Some(window) = the_window() {
         window.orderFrontRegardless();
     }
 }
 
-/// La única que hay: el Visor enseña una hoja cada vez.
+/// The only one there is: the Viewer shows one sheet at a time.
 fn the_window() -> Option<Retained<NSWindow>> {
     application()?.windows().iter().next()
 }

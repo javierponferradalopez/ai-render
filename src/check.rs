@@ -1,14 +1,15 @@
 #![allow(
     clippy::print_stdout,
-    reason = "el subcomando de diagnóstico es dueño de stdout: no hay sesión MCP que corromper"
+    reason = "the diagnostic subcommand owns stdout: there is no MCP session to corrupt"
 )]
 
 use std::path::Path;
 
 use crate::diagram;
 
-/// Corre la tubería sobre ficheros `.mmd` e imprime el desenlace y su texto, sin
-/// abrir ventana. Es lo que hace medibles las reglas del Límite honesto.
+/// Runs the pipeline over `.mmd` files and prints the outcome and its text,
+/// without opening a window. It is what makes the Honest limit's rules
+/// measurable.
 pub fn check(paths: &[String]) {
     for path in paths {
         println!("== {path}");
@@ -38,18 +39,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn un_diagrama_que_se_dibuja_dice_el_desenlace_y_el_recuento() {
-        let texto = outcome_of("flowchart LR\n  A[Uno] --> B[Dos]\n", "dos-nodos");
+    fn a_diagram_that_gets_drawn_says_the_outcome_and_the_recount() {
+        let text = outcome_of("flowchart LR\n  A[One] --> B[Two]\n", "two-nodes");
 
-        assert_eq!(texto, "drawn\n2 nodes, 1 edge");
+        assert_eq!(text, "drawn\n2 nodes, 1 edge");
     }
 
     #[test]
-    fn un_dibujo_con_aviso_lo_imprime_detras_del_recuento() {
-        let texto = outcome_of("flowchart TB\n  A[Uno] --> B[Dos]\n", "dos-nodos");
+    fn a_drawing_with_a_note_prints_it_after_the_recount() {
+        let text = outcome_of("flowchart TB\n  A[One] --> B[Two]\n", "two-nodes");
 
         assert_eq!(
-            texto,
+            text,
             "drawn\n2 nodes, 1 edge\n\
              Note: the flipchart lays diagrams out left to right; the direction in your \
              source was ignored. The view was drawn."
@@ -57,11 +58,11 @@ mod tests {
     }
 
     #[test]
-    fn un_rechazo_dice_el_desenlace_y_el_texto_que_recibiria_el_agente() {
-        let texto = outcome_of("flowchart TD\n  API[API Layer] --> Db\n", "fc-99");
+    fn a_rejection_says_the_outcome_and_the_text_the_agent_would_receive() {
+        let text = outcome_of("flowchart TD\n  API[API Layer] --> Db\n", "fc-99");
 
         assert_eq!(
-            texto,
+            text,
             "undeclared nodes\n\
              Rejected: nothing was drawn; view \"fc-99\" is unchanged.\n\
              1 node appears in the drawing that you did not declare.\n  \
@@ -71,10 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn el_view_id_del_diagnostico_es_el_nombre_del_fichero() {
-        assert_eq!(
-            view_id("cases/fc-11-header-desnuda.mmd"),
-            "fc-11-header-desnuda"
-        );
+    fn the_diagnostic_view_id_is_the_file_name() {
+        assert_eq!(view_id("cases/fc-11-bare-header.mmd"), "fc-11-bare-header");
     }
 }

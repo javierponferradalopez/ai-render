@@ -57,9 +57,9 @@ fn judge(
     })
 }
 
-/// Etiqueta, cuerpo o forma propia. El IR no distingue `Order["Order"]` de
-/// `Order` a secas —la etiqueta que coincide con el id se pierde—, así que la
-/// tercera pregunta se la hacemos al fuente.
+/// A label, a body or a shape of its own. The IR does not tell `Order["Order"]`
+/// from a bare `Order` —a label that matches the id is lost—, so the third
+/// question is put to the source.
 fn declares_itself(node: &Node, body: &Body<'_>) -> bool {
     node.label != node.id || node.shape != NodeShape::Rectangle || body.gives_it_a_body(&node.id)
 }
@@ -71,8 +71,8 @@ fn in_a_relation(graph: &Graph, id: &str) -> bool {
         .any(|edge| edge.from == id || edge.to == id)
 }
 
-/// El fuente sin su primera línea: la cabecera dice de qué tipo es el diagrama y
-/// no declara nodos en ninguna familia de Mermaid.
+/// The source without its first line: the header says what kind of diagram this
+/// is and declares no nodes in any Mermaid family.
 #[derive(Debug)]
 struct Body<'a> {
     lines: Vec<(usize, &'a str)>,
@@ -111,8 +111,8 @@ impl<'a> Body<'a> {
     }
 }
 
-/// Dónde nombra la línea al `id` —como token entero, no como trozo de otro— y
-/// qué carácter viene detrás.
+/// Where the line names the `id` —as a whole token, not as a piece of another—
+/// and which character comes after it.
 fn named_in<'a>(line: &'a str, id: &'a str) -> impl Iterator<Item = Option<char>> + 'a {
     let a_token = !id.is_empty() && id.chars().all(part_of_an_id);
     a_token
@@ -176,75 +176,76 @@ mod tests {
 
     use super::*;
 
-    fn reglas(source: &str) -> Option<String> {
-        let parsed = parse_mermaid(source).expect("el fuente de la prueba parsea");
+    fn rules(source: &str) -> Option<String> {
+        let parsed = parse_mermaid(source).expect("the test source parses");
         undeclared_nodes(&parsed.graph, source)
     }
 
     #[test]
-    fn un_grafo_de_ids_desnudos_se_dibuja() {
-        assert_eq!(reglas("flowchart TD\n  A --> B\n"), None);
+    fn a_graph_of_bare_ids_gets_drawn() {
+        assert_eq!(rules("flowchart TD\n  A --> B\n"), None);
     }
 
     #[test]
-    fn un_id_desnudo_al_lado_de_uno_con_etiqueta_se_rechaza() {
-        let rechazo = reglas("flowchart TD\n  API[API Layer] --> Db\n").unwrap();
+    fn a_bare_id_next_to_a_labelled_one_is_rejected() {
+        let rejection = rules("flowchart TD\n  API[API Layer] --> Db\n").unwrap();
 
-        assert!(rechazo.contains("\"Db\"  line 2  — only used in a relation"));
+        assert!(rejection.contains("\"Db\"  line 2  — only used in a relation"));
     }
 
     #[test]
-    fn una_etiqueta_que_repite_el_id_sigue_siendo_etiqueta() {
-        assert_eq!(reglas("flowchart TD\n  API[API Layer] --> Db[Db]\n"), None);
+    fn a_label_that_repeats_the_id_is_still_a_label() {
+        assert_eq!(rules("flowchart TD\n  API[API Layer] --> Db[Db]\n"), None);
     }
 
     #[test]
-    fn el_caso_protagonista_no_es_un_falso_positivo() {
+    fn the_leading_case_is_not_a_false_positive() {
         let arch =
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/casos/arch.mmd"))
-                .expect("el caso protagonista está en el repo");
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cases/arch.mmd"))
+                .expect("the leading case is in the repo");
 
-        assert_eq!(reglas(&arch), None);
+        assert_eq!(rules(&arch), None);
     }
 
     #[test]
-    fn el_nodo_que_el_parser_fabrica_de_la_cabecera_no_esta_en_el_fuente() {
-        let rechazo = reglas("flowchart\n  A[Uno] --> B[Dos]\n").unwrap();
+    fn the_node_the_parser_manufactures_from_the_header_is_not_in_the_source() {
+        let rejection = rules("flowchart\n  A[One] --> B[Two]\n").unwrap();
 
-        assert!(rechazo.contains("\"flowchart\"  — not in your source"));
+        assert!(rejection.contains("\"flowchart\"  — not in your source"));
     }
 
     #[test]
-    fn el_id_que_el_parser_parte_de_una_linea_que_no_supo_leer_se_rechaza() {
-        let rechazo =
-            reglas("flowchart TD\n  Uno@{ shape: cyl, label: \"X\" }\n  Uno --> Dos[Dos]\n")
+    fn the_id_the_parser_breaks_off_a_line_it_could_not_read_is_rejected() {
+        let rejection =
+            rules("flowchart TD\n  One@{ shape: cyl, label: \"X\" }\n  One --> Two[Two]\n")
                 .unwrap();
 
-        assert!(rechazo.contains("\"Uno@\"  line 2  — not in your source"));
+        assert!(rejection.contains("\"One@\"  line 2  — not in your source"));
     }
 
     #[test]
-    fn las_dos_causas_van_juntas_en_un_solo_rechazo() {
-        let rechazo = reglas("flowchart TD\n  Uno@{ shape: cyl }\n  Dos[Dos] --> Tres\n").unwrap();
+    fn the_two_causes_travel_together_in_a_single_rejection() {
+        let rejection =
+            rules("flowchart TD\n  One@{ shape: cyl }\n  Two[Two] --> Three\n").unwrap();
 
         assert_eq!(
-            rechazo,
+            rejection,
             "2 nodes appear in the drawing that you did not declare.\n  \
-             \"Uno@\"  line 2  — not in your source\n  \
-             \"Tres\"  line 3  — only used in a relation\n\
+             \"One@\"   line 2  — not in your source\n  \
+             \"Three\"  line 3  — only used in a relation\n\
              Declare every node you name, and rewrite any line the renderer turned into one."
         );
     }
 
     #[test]
-    fn un_nodo_declarado_a_secas_y_sin_relaciones_no_es_un_fantasma() {
-        assert_eq!(reglas("flowchart TD\n  A[Uno] --> B[Dos]\n  C\n"), None);
+    fn a_node_declared_bare_and_with_no_relations_is_not_a_phantom() {
+        assert_eq!(rules("flowchart TD\n  A[One] --> B[Two]\n  C\n"), None);
     }
 
     #[test]
-    fn el_careo_deja_fuera_la_primera_linea() {
-        let rechazo = reglas("flowchart TD\n  TD[Uno] --> flowchart\n");
+    fn the_confrontation_leaves_the_first_line_out() {
+        let rejection = rules("flowchart TD\n  TD[One] --> flowchart\n");
 
-        assert!(rechazo.unwrap().contains("\"flowchart\""));
+        assert!(rejection.unwrap().contains("\"flowchart\""));
     }
 }

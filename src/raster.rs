@@ -1,4 +1,4 @@
-//! El SVG a píxeles, en un hilo de trabajo: el event loop sólo sube la textura.
+//! The SVG to pixels, on a worker thread: the event loop only uploads the texture.
 
 use std::collections::HashMap;
 use std::sync::mpsc::{Receiver, Sender, TryIter, channel};
@@ -7,8 +7,8 @@ use std::thread;
 use eframe::egui;
 use resvg::{tiny_skia, usvg};
 
-/// Una escala redondeada a octavos. Rasterizar en cada píxel de arrastre pasaría
-/// el SVG entero por `resvg` decenas de veces por segundo.
+/// A scale rounded to eighths. Rasterising on every pixel of a drag would put
+/// the whole SVG through `resvg` dozens of times a second.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Scale(u32);
 
@@ -28,8 +28,8 @@ enum Job {
     Paint { sheet: u64, scale: Scale },
 }
 
-/// Marcado siempre con la hoja de la que salió: un `show` durante la
-/// rasterización deja obsoleto lo que venía en camino.
+/// Always stamped with the sheet it came from: a `show` during rasterisation
+/// leaves whatever was on its way obsolete.
 #[derive(Debug)]
 pub enum Rendered {
     Measured {
@@ -57,8 +57,8 @@ impl Rasterizer {
         Self { jobs, rendered }
     }
 
-    /// Las hojas vivas, en el orden en que están: las que el hilo no tenía se
-    /// leen y se miden, y las que ya no vienen se sueltan.
+    /// The live sheets, in the order they are in: the ones the thread did not
+    /// have are read and measured, and the ones no longer coming are dropped.
     pub fn deck(&self, sheets: Vec<(u64, String)>) {
         let _ = self.jobs.send(Job::Deck { sheets });
     }
@@ -131,7 +131,7 @@ fn parse(svg: &str, options: &usvg::Options<'_>) -> Option<usvg::Tree> {
     match usvg::Tree::from_str(svg, options) {
         Ok(tree) => Some(tree),
         Err(error) => {
-            eprintln!("[flipchart] el SVG dibujado no se puede leer: {error}");
+            eprintln!("[flipchart] the drawn SVG cannot be read: {error}");
             None
         }
     }
@@ -148,7 +148,7 @@ fn rasterize(tree: &usvg::Tree, scale: f32) -> egui::ColorImage {
     let width = ((size.x * scale).ceil() as u32).clamp(1, MAX_TEXTURE_SIDE);
     let height = ((size.y * scale).ceil() as u32).clamp(1, MAX_TEXTURE_SIDE);
 
-    let mut pixmap = tiny_skia::Pixmap::new(width, height).expect("un lado acotado cabe siempre");
+    let mut pixmap = tiny_skia::Pixmap::new(width, height).expect("a bounded side always fits");
     pixmap.fill(tiny_skia::Color::WHITE);
     resvg::render(
         tree,
@@ -163,67 +163,67 @@ fn rasterize(tree: &usvg::Tree, scale: f32) -> egui::ColorImage {
 mod tests {
     use super::*;
 
-    const CUADRADO: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="black"/></svg>"#;
+    const SQUARE: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="black"/></svg>"#;
 
-    fn cuadrado() -> usvg::Tree {
-        parse(CUADRADO, &system_fonts()).expect("el SVG de prueba se lee")
+    fn square() -> usvg::Tree {
+        parse(SQUARE, &system_fonts()).expect("the test SVG reads")
     }
 
     #[test]
-    fn el_natural_es_el_del_svg() {
-        assert_eq!(natural(&cuadrado()), egui::vec2(100.0, 50.0));
+    fn the_natural_size_is_the_svgs() {
+        assert_eq!(natural(&square()), egui::vec2(100.0, 50.0));
     }
 
     #[test]
-    fn rasterizar_al_natural_da_los_pixeles_del_svg() {
-        let imagen = rasterize(&cuadrado(), 1.0);
+    fn rasterising_at_natural_size_gives_the_svgs_pixels() {
+        let image = rasterize(&square(), 1.0);
 
-        assert_eq!(imagen.size, [100, 50]);
+        assert_eq!(image.size, [100, 50]);
     }
 
     #[test]
-    fn rasterizar_a_dos_veces_da_el_doble_de_pixeles() {
-        let imagen = rasterize(&cuadrado(), 2.0);
+    fn rasterising_at_twice_gives_twice_the_pixels() {
+        let image = rasterize(&square(), 2.0);
 
-        assert_eq!(imagen.size, [200, 100]);
+        assert_eq!(image.size, [200, 100]);
     }
 
     #[test]
-    fn un_svg_que_no_se_lee_no_tumba_el_hilo() {
-        assert!(parse("esto no es un SVG", &system_fonts()).is_none());
+    fn an_svg_that_does_not_read_does_not_bring_the_thread_down() {
+        assert!(parse("this is not an SVG", &system_fonts()).is_none());
     }
 
     #[test]
-    fn una_hoja_ya_leida_no_se_vuelve_a_leer() {
+    fn a_sheet_already_read_is_not_read_again() {
         let options = system_fonts();
         let mut loaded = HashMap::new();
-        read(&[(1, CUADRADO.to_string())], &mut loaded, &options);
+        read(&[(1, SQUARE.to_string())], &mut loaded, &options);
 
-        let medidas = read(
-            &[(1, CUADRADO.to_string()), (2, CUADRADO.to_string())],
+        let measured = read(
+            &[(1, SQUARE.to_string()), (2, SQUARE.to_string())],
             &mut loaded,
             &options,
         );
 
         assert!(matches!(
-            medidas.as_slice(),
+            measured.as_slice(),
             [Rendered::Measured { sheet: 2, .. }]
         ));
     }
 
     #[test]
-    fn la_escala_se_redondea_a_octavos() {
+    fn the_scale_is_rounded_to_eighths() {
         assert_eq!(Scale::nearest(0.7).factor(), 0.75);
         assert_eq!(Scale::nearest(1.0).factor(), 1.0);
     }
 
     #[test]
-    fn dos_escalas_del_mismo_octavo_son_la_misma_y_reusan_la_textura() {
+    fn two_scales_of_the_same_eighth_are_the_same_and_reuse_the_texture() {
         assert_eq!(Scale::nearest(0.74), Scale::nearest(0.76));
     }
 
     #[test]
-    fn la_escala_nunca_llega_a_cero() {
+    fn the_scale_never_reaches_zero() {
         assert!(Scale::nearest(0.0).factor() > 0.0);
     }
 }

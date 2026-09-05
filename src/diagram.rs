@@ -17,8 +17,8 @@ pub struct Drawing {
 }
 
 impl Drawing {
-    /// La única realimentación que el agente tiene sobre el dibujo, porque la
-    /// imagen no vuelve nunca al contexto.
+    /// The only feedback the agent has about the drawing, because the image
+    /// never comes back into the context.
     pub fn recount(&self) -> String {
         format!(
             "{}, {}",
@@ -27,8 +27,8 @@ impl Drawing {
         )
     }
 
-    /// Los avisos van detrás, uno por línea: el agente lee primero el desenlace
-    /// y después el precio.
+    /// The notes go after, one per line: the agent reads the outcome first and
+    /// the price afterwards.
     pub fn noted_after(&self, text: String) -> String {
         self.notes.iter().fold(text, |mut told, note| {
             told.push('\n');
@@ -46,9 +46,9 @@ fn plural(count: usize, noun: &str) -> String {
     }
 }
 
-/// Los cuatro desenlaces de `show` que no dibujan. El de pánico es el único que
-/// dice que la culpa es nuestra, a propósito: si le pedimos al agente que
-/// arregle su diagrama, lo intentará en bucle sobre algo que no tiene arreglo.
+/// The four outcomes of `show` that do not draw. The panic one is the only one
+/// that says the fault is ours, on purpose: if we ask the agent to fix its
+/// diagram, it will try in a loop on something that has no fix.
 #[derive(Debug)]
 pub enum Rejection {
     InvalidInput(String),
@@ -85,8 +85,8 @@ impl Rejection {
     }
 }
 
-/// Los de fábrica, sin tocar: ninguna perilla de mmdr mejora el dibujo y varias
-/// hacen daño. Medido en el ADR-0003.
+/// Factory settings, untouched: no mmdr knob improves the drawing and several
+/// do harm. Measured in ADR-0003.
 fn theme() -> Theme {
     Theme::mermaid_default()
 }
@@ -115,14 +115,15 @@ pub fn draw(source: &str) -> Result<Drawing, Rejection> {
     })
 }
 
-/// Servidor y Visor comparten proceso, así que un pánico sin capturar se
-/// llevaría la pizarra entera por delante, callando.
+/// Server and Viewer share a process, so an uncaught panic would take the whole
+/// flipchart down with it, silently.
 fn guarded<T>(step: impl FnOnce() -> T) -> Result<T, Rejection> {
     catch_unwind(AssertUnwindSafe(step)).map_err(|_| Rejection::RendererPanicked)
 }
 
-/// Se entra por el camino permisivo; el strict sólo se paga cuando ya no se va a
-/// dibujar nada, y sólo para obtener el `ParseError` tipado del mensaje.
+/// We come in through the permissive path; strict is only paid for when nothing
+/// is going to be drawn any more, and only to get the typed `ParseError` for the
+/// message.
 fn read(source: &str) -> Result<ParseOutput, String> {
     match parse_mermaid(source) {
         Ok(parsed) => Ok(parsed),
@@ -185,99 +186,99 @@ fn shortlist(items: impl Iterator<Item = String>) -> String {
 mod tests {
     use super::*;
 
-    const DOS_NODOS: &str = "flowchart TD\n  A[Uno] --> B[Dos]\n";
+    const TWO_NODES: &str = "flowchart TD\n  A[One] --> B[Two]\n";
 
-    /// El **caso protagonista**, que es entender un refactor antes de hacerlo:
-    /// cuatro grupos y siete aristas.
+    /// The **leading case**, which is understanding a refactor before doing it:
+    /// four groups and seven edges.
     fn arch() -> String {
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/casos/arch.mmd"))
-            .expect("el caso protagonista está en el repo")
+        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cases/arch.mmd"))
+            .expect("the leading case is in the repo")
     }
 
     #[test]
-    fn la_tuberia_devuelve_un_svg_con_las_etiquetas_dentro() {
-        let dibujo = draw(DOS_NODOS).unwrap();
+    fn the_pipeline_returns_an_svg_with_the_labels_inside() {
+        let drawing = draw(TWO_NODES).unwrap();
 
-        assert!(dibujo.svg.starts_with("<svg"));
-        assert!(dibujo.svg.contains("Uno"));
-        assert!(dibujo.svg.contains("Dos"));
+        assert!(drawing.svg.starts_with("<svg"));
+        assert!(drawing.svg.contains("One"));
+        assert!(drawing.svg.contains("Two"));
     }
 
     #[test]
-    fn la_tuberia_cuenta_lo_que_ha_dibujado() {
-        let dibujo = draw(DOS_NODOS).unwrap();
+    fn the_pipeline_counts_what_it_has_drawn() {
+        let drawing = draw(TWO_NODES).unwrap();
 
-        assert_eq!((dibujo.nodes, dibujo.edges), (2, 1));
+        assert_eq!((drawing.nodes, drawing.edges), (2, 1));
     }
 
     #[test]
-    fn el_tema_es_el_de_mermaid_y_no_el_moderno_de_14_px() {
+    fn the_theme_is_mermaids_and_not_the_modern_14_px_one() {
         assert_eq!(theme().font_size, Theme::mermaid_default().font_size);
         assert_ne!(theme().font_size, Theme::modern().font_size);
     }
 
     #[test]
-    fn lo_que_no_es_mermaid_no_llega_a_dibujarse() {
-        assert!(draw("esto no es Mermaid").is_err());
+    fn what_is_not_mermaid_never_gets_drawn() {
+        assert!(draw("this is not Mermaid").is_err());
     }
 
     #[test]
-    fn el_caso_protagonista_sale_entero_por_la_tuberia() {
-        let dibujo = draw(&arch()).unwrap();
+    fn the_leading_case_comes_out_whole_through_the_pipeline() {
+        let drawing = draw(&arch()).unwrap();
 
-        assert_eq!((dibujo.nodes, dibujo.edges), (8, 7));
-        for grupo in ["API", "Application", "Domain", "Infrastructure"] {
-            assert!(dibujo.svg.contains(grupo), "falta el grupo {grupo}");
+        assert_eq!((drawing.nodes, drawing.edges), (8, 7));
+        for group in ["API", "Application", "Domain", "Infrastructure"] {
+            assert!(drawing.svg.contains(group), "the {group} group is missing");
         }
     }
 
     #[test]
-    fn lo_que_no_parsea_es_el_desenlace_del_parse_error() {
-        let rechazo = draw("esto no es Mermaid").unwrap_err();
+    fn what_does_not_parse_is_the_parse_error_outcome() {
+        let rejection = draw("this is not Mermaid").unwrap_err();
 
-        assert_eq!(rechazo.outcome(), "parse error");
+        assert_eq!(rejection.outcome(), "parse error");
     }
 
     #[test]
-    fn un_nodo_que_el_agente_no_declaro_es_el_desenlace_de_las_reglas() {
-        let rechazo = draw("flowchart TD\n  API[API Layer] --> Db\n").unwrap_err();
+    fn a_node_the_agent_did_not_declare_is_the_rules_outcome() {
+        let rejection = draw("flowchart TD\n  API[API Layer] --> Db\n").unwrap_err();
 
-        assert_eq!(rechazo.outcome(), "undeclared nodes");
+        assert_eq!(rejection.outcome(), "undeclared nodes");
     }
 
     #[test]
-    fn el_parse_error_va_antes_que_las_reglas_porque_sin_grafo_no_hay_reglas() {
-        let rechazo = draw("no es Mermaid\n  API[API Layer] --> Db\n").unwrap_err();
+    fn the_parse_error_comes_before_the_rules_because_without_a_graph_there_are_none() {
+        let rejection = draw("not Mermaid\n  API[API Layer] --> Db\n").unwrap_err();
 
-        assert_eq!(rechazo.outcome(), "parse error");
+        assert_eq!(rejection.outcome(), "parse error");
     }
 
     #[test]
-    fn todo_rechazo_que_no_sea_el_panico_abre_con_la_linea_fija() {
-        let rechazo = draw("esto no es Mermaid").unwrap_err();
+    fn every_rejection_that_is_not_the_panic_opens_with_the_fixed_line() {
+        let rejection = draw("this is not Mermaid").unwrap_err();
 
         assert!(
-            rechazo
-                .told_about("propuesto")
-                .starts_with("Rejected: nothing was drawn; view \"propuesto\" is unchanged.\n")
+            rejection
+                .told_about("proposed")
+                .starts_with("Rejected: nothing was drawn; view \"proposed\" is unchanged.\n")
         );
     }
 
     #[test]
-    fn el_panico_es_el_unico_rechazo_que_dice_que_la_culpa_es_nuestra() {
-        let texto = Rejection::RendererPanicked.told_about("propuesto");
+    fn the_panic_is_the_only_rejection_that_says_the_fault_is_ours() {
+        let text = Rejection::RendererPanicked.told_about("proposed");
 
         assert_eq!(
-            texto,
+            text,
             "Rejected: the renderer failed on this diagram; nothing was drawn.\n\
-             View \"propuesto\" is unchanged. This is a bug in the flipchart, not in your \
+             View \"proposed\" is unchanged. This is a bug in the flipchart, not in your \
              diagram — try a simpler diagram, or the same one with fewer nodes."
         );
     }
 
     #[test]
-    fn el_token_inesperado_lleva_linea_columna_y_lo_encontrado() {
-        let texto = diagnosed(&ParseError::UnexpectedToken {
+    fn the_unexpected_token_carries_line_column_and_what_was_found() {
+        let text = diagnosed(&ParseError::UnexpectedToken {
             line: 4,
             col: 3,
             found: "-->".to_string(),
@@ -285,67 +286,67 @@ mod tests {
         });
 
         assert_eq!(
-            texto,
+            text,
             "Unexpected token at line 4, column 3 — found \"-->\", expected class."
         );
     }
 
     #[test]
-    fn un_expected_largo_se_queda_en_los_tres_primeros() {
-        let texto = diagnosed(&ParseError::UnexpectedToken {
+    fn a_long_expected_stops_at_the_first_three() {
+        let text = diagnosed(&ParseError::UnexpectedToken {
             line: 4,
             col: 3,
             found: "-->".to_string(),
             expected: "class, }, an identifier, a comment".to_string(),
         });
 
-        assert!(texto.ends_with("expected class, } or an identifier."));
+        assert!(text.ends_with("expected class, } or an identifier."));
     }
 
     #[test]
-    fn el_participante_desconocido_ofrece_los_candidatos() {
-        let texto = diagnosed(&ParseError::UnknownParticipant {
+    fn the_unknown_participant_offers_the_candidates() {
+        let text = diagnosed(&ParseError::UnknownParticipant {
             name: "Ordr".to_string(),
             line: 6,
             candidates: vec!["Order".to_string()],
         });
 
         assert_eq!(
-            texto,
+            text,
             "Unknown node \"Ordr\" at line 6 — did you mean \"Order\"?"
         );
     }
 
     #[test]
-    fn el_participante_desconocido_sin_candidatos_no_inventa_ninguno() {
-        let texto = diagnosed(&ParseError::UnknownParticipant {
+    fn the_unknown_participant_with_no_candidates_invents_none() {
+        let text = diagnosed(&ParseError::UnknownParticipant {
             name: "Ordr".to_string(),
             line: 6,
             candidates: Vec::new(),
         });
 
         assert_eq!(
-            texto,
+            text,
             "Unknown node \"Ordr\" at line 6 — it was never declared."
         );
     }
 
     #[test]
-    fn el_subgrafo_sin_cerrar_dice_donde_se_abrio() {
-        let texto = diagnosed(&ParseError::UnclosedSubgraph { opened_at: 3 });
+    fn the_unclosed_subgraph_says_where_it_was_opened() {
+        let text = diagnosed(&ParseError::UnclosedSubgraph { opened_at: 3 });
 
-        assert_eq!(texto, "A subgraph opened at line 3 was never closed.");
+        assert_eq!(text, "A subgraph opened at line 3 was never closed.");
     }
 
     #[test]
-    fn la_variante_sin_clasificar_admite_que_no_la_hemos_clasificado() {
-        let texto = diagnosed(&ParseError::InvalidDirective {
+    fn the_unclassified_variant_admits_we_have_not_classified_it() {
+        let text = diagnosed(&ParseError::InvalidDirective {
             line: 2,
             col: 1,
             directive: "init".to_string(),
             reason: "empty body".to_string(),
         });
 
-        assert!(texto.starts_with("The flipchart did not classify this failure: "));
+        assert!(text.starts_with("The flipchart did not classify this failure: "));
     }
 }

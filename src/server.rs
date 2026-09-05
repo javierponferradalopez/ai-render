@@ -86,10 +86,11 @@ pub fn serve(viewer: Wire) -> ! {
     the_session_is_over(&viewer)
 }
 
-/// Las dos señales de muerte, en el orden en que llegan: `SIGINT` —lo primero
-/// que manda el host— y el EOF en stdin que la especificación de MCP sobre
-/// stdio manda atender. El `SIGINT` se escucha desde antes del `initialize`,
-/// porque desde que se registra deja de matar el proceso por su cuenta.
+/// The two death signals, in the order they arrive: `SIGINT` —the first thing
+/// the host sends— and the EOF on stdin that the MCP-over-stdio specification
+/// requires us to handle. `SIGINT` is listened for from before `initialize`,
+/// because from the moment it is registered it stops killing the process on its
+/// own.
 async fn until_the_session_dies(viewer: Wire) {
     let mut interrupted =
         signal(SignalKind::interrupt()).expect("the server thread listens for SIGINT");

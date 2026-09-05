@@ -1,4 +1,4 @@
-//! El Visor: el rotafolio que enseña la hoja que el agente puso delante.
+//! The Viewer: the flipchart that shows the sheet the agent put at the front.
 
 use std::sync::Arc;
 use std::sync::OnceLock;
@@ -10,8 +10,9 @@ use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
 use crate::mac::bring_the_window_forward;
 use crate::raster::{Rasterizer, Rendered, Scale};
 
-/// Una hoja ya dibujada, tal como cruza. La numera quien la dibuja: un `show`
-/// sobre un id que ya existía da una hoja nueva con el mismo nombre.
+/// An already drawn sheet, exactly as it arrives. Whoever draws it numbers it:
+/// a `show` over an id that already existed gives a new sheet with the same
+/// name.
 #[derive(Debug)]
 pub struct Drawn {
     pub number: u64,
@@ -19,25 +20,26 @@ pub struct Drawn {
     pub svg: String,
 }
 
-/// La pizarra entera cada vez: las hojas **en orden de creación** y **cuál va
-/// delante**. El Visor no decide ninguna de las dos cosas.
+/// The whole flipchart every time: the sheets **in creation order** and **which
+/// one is at the front**. The Viewer decides neither of those two things.
 #[derive(Debug)]
 pub struct DeckSnapshot {
     pub sheets: Vec<Drawn>,
     pub front: Option<usize>,
 }
 
-/// Lo que el Servidor le manda al Visor: dibujar la pizarra entera, o
-/// despedirse — que ocurre una vez y es lo último que cruza.
+/// What the server sends the Viewer: draw the whole flipchart, or say goodbye —
+/// which happens once and is the last thing to come across.
 #[derive(Debug)]
 pub enum Command {
     Show(DeckSnapshot),
     SessionOver,
 }
 
-/// El canal en memoria del Servidor al Visor. Es más que un `Sender`: despierta
-/// al event loop, que macOS no ralentiza sino que **para** con la ventana
-/// tapada — y tapada es el caso normal, con el usuario en su terminal.
+/// The in-memory channel from the server to the Viewer. It is more than a
+/// `Sender`: it wakes the event loop, which macOS does not slow down but
+/// **stops** when the window is covered — and covered is the normal case, with
+/// the user in their terminal.
 #[derive(Debug, Clone)]
 pub struct Wire {
     commands: Sender<Command>,
@@ -49,9 +51,9 @@ impl Wire {
         self.tell(Command::Show(snapshot));
     }
 
-    /// El adiós del Visor, que lo manda el hilo del servidor porque es el único
-    /// que sabe qué hora es. Dice si había ventana a la que despedir: una
-    /// sesión que nunca dibujó nada no tiene a quién decírselo.
+    /// The Viewer's goodbye, sent by the server thread because it is the only
+    /// one that knows what time it is. It says whether there was a window to
+    /// say goodbye to: a session that never drew anything has nobody to tell.
     pub fn say_goodbye(&self) -> bool {
         self.tell(Command::SessionOver);
         self.awake.get().is_some()
@@ -98,8 +100,9 @@ pub fn wire() -> (Wire, Commands) {
     )
 }
 
-/// Arranque diferido: el hilo principal se queda en el canal y no crea el event
-/// loop —ni los 97 MB que cuesta— hasta que el agente pide el primer dibujo.
+/// Deferred start: the main thread stays on the channel and does not create the
+/// event loop —nor the 97 MB it costs— until the agent asks for the first
+/// drawing.
 pub fn open_at_the_first_show(commands: Commands) {
     let Some(first) = wait_for_the_first_show(&commands) else {
         return;
@@ -108,17 +111,17 @@ pub fn open_at_the_first_show(commands: Commands) {
         viewport: egui::ViewportBuilder::default()
             .with_title(title())
             .with_inner_size([1200.0, 800.0]),
-        // La subida de `Accessory` a `Regular` ocurre al construir el event loop,
-        // que es exactamente el primer `show`. Tiene que ser aquí y no después:
-        // medido, una app que nació accesoria no se activa nunca —ni cambiando
-        // la política ni diez frames más tarde— y la ventana aparece detrás del
-        // terminal mientras el agente dice que ha dibujado.
+        // The move up from `Accessory` to `Regular` happens when the event loop
+        // is built, which is exactly the first `show`. It has to be here and not
+        // later: measured, an app that was born accessory never activates
+        // —neither by changing the policy nor ten frames later— and the window
+        // appears behind the terminal while the agent says it has drawn.
         //
-        // Y hay que desarmar lo que `winit` hace por su cuenta al arrancar:
-        // `activateIgnoringOtherApps(true)`, que **roba el teclado a media
-        // frase** antes de que nadie más llegue a opinar. Es el ladrón de
-        // verdad — sin esta línea, poner la ventana delante sin activar la app
-        // no cambia nada.
+        // And what `winit` does on its own at startup has to be disarmed:
+        // `activateIgnoringOtherApps(true)`, which **steals the keyboard
+        // mid-sentence** before anyone else gets a say. That is the real thief —
+        // without this line, putting the window in front without activating the
+        // app changes nothing.
         event_loop_builder: Some(Box::new(|builder| {
             builder.with_activation_policy(ActivationPolicy::Regular);
             builder.with_activate_ignoring_other_apps(false);
@@ -144,8 +147,8 @@ fn wait_for_the_first_show(commands: &Commands) -> Option<DeckSnapshot> {
 
 fn title() -> String {
     match working_directory() {
-        Some(directory) => format!("Pizarra — {directory}"),
-        None => "Pizarra".to_string(),
+        Some(directory) => format!("Flipchart — {directory}"),
+        None => "Flipchart".to_string(),
     }
 }
 
@@ -154,8 +157,8 @@ fn working_directory() -> Option<String> {
     Some(path.file_name()?.to_string_lossy().into_owned())
 }
 
-/// Una hoja en pantalla: lo que el Visor recuerda de ella es su dibujo, y el
-/// **zoom es suyo** — cada Vista guarda el que le tocó por su tamaño.
+/// A sheet on screen: what the Viewer remembers of it is its drawing, and the
+/// **zoom is its own** — each View keeps the one its size earned it.
 struct Sheet {
     number: u64,
     id: String,
@@ -176,9 +179,9 @@ impl Sheet {
     }
 }
 
-/// Las hojas que hay y cuál se mira. El cursor es **local del Visor** —el único
-/// mando del usuario— y **lo pisa el siguiente `show`**: un `clear` lo deja
-/// mirando donde estaba.
+/// The sheets there are and which one is being looked at. The cursor is **local
+/// to the Viewer** —the user's only control— and **the next `show` overwrites
+/// it**: a `clear` leaves it looking where it was.
 #[derive(Default)]
 struct Deck {
     sheets: Vec<Sheet>,
@@ -321,9 +324,9 @@ impl Viewer {
         Some((texture.clone(), natural * zoom))
     }
 
-    /// La cabecera del rotafolio: la hoja, su nombre, dos flechas y «hoja N de
-    /// M». **Sin índice** — un índice es mando de administración, y el usuario
-    /// no administra: observa.
+    /// The flipchart's header: the sheet, its name, two arrows and «sheet N of
+    /// M». **No index** — an index is an administration control, and the user
+    /// does not administer: they watch.
     fn header(&mut self, ui: &mut egui::Ui) {
         let sheets = self.deck.sheets.len();
         let cursor = self.deck.cursor;
@@ -341,27 +344,28 @@ impl Viewer {
             {
                 self.deck.forward();
             }
-            ui.weak(format!("hoja {} de {sheets}", cursor + 1));
+            ui.weak(format!("sheet {} of {sheets}", cursor + 1));
         });
     }
 }
 
 const MINIMUM_ZOOM: f32 = 0.05;
 
-/// La ventana nace al primer `show` y **renace** en el siguiente tras un ⌘W,
-/// que la oculta y no la mata: en `eframe` cerrarla termina la aplicación —y
-/// con ella el servidor MCP, dejando al agente sin herramientas a media
-/// conversación— y en macOS un event loop de `winit` no se puede volver a
-/// arrancar, así que si muriera no habría segunda ventana nunca.
+/// The window is born on the first `show` and is **reborn** on the next one
+/// after a ⌘W, which hides it and does not kill it: in `eframe` closing it ends
+/// the application —and with it the MCP server, leaving the agent without tools
+/// mid-conversation— and on macOS a `winit` event loop cannot be started again,
+/// so if it died there would never be a second window.
 ///
-/// Se manda delante cuando nace y cuando renace, y **nunca en una
-/// actualización**: saltar al frente cada vez que el agente retoca, mientras el
-/// usuario escribe en la terminal, es intolerable.
+/// It is sent to the front when it is born and when it is reborn, and **never on
+/// an update**: jumping to the front every time the agent touches something up,
+/// while the user is typing in the terminal, is intolerable.
 ///
-/// **Nacer espera al primer frame.** `eframe` crea su ventana oculta y la
-/// muestra él, con `makeKeyAndOrderFront`, en cuanto ha pintado algo; mandarla
-/// delante antes de eso no sirve de nada —medido, se queda **detrás** del
-/// terminal y ahí se queda—. En el renacer no espera nada: la ventana ya pintó.
+/// **Being born waits for the first frame.** `eframe` creates its window hidden
+/// and shows it itself, with `makeKeyAndOrderFront`, as soon as it has painted
+/// something; sending it to the front before that is useless —measured, it stays
+/// **behind** the terminal and there it stays—. On the rebirth it waits for
+/// nothing: the window has already painted.
 #[derive(Debug, Default)]
 struct Window {
     open: bool,
@@ -389,15 +393,16 @@ impl Window {
         std::mem::take(&mut self.asked_for) && !std::mem::replace(&mut self.open, true)
     }
 
-    /// El `show` ya llegó y la ventana todavía no existe: hay que volver a
-    /// pasar por aquí en cuanto se haya pintado, o se queda detrás para siempre.
+    /// The `show` has already arrived and the window does not exist yet: we have
+    /// to come back through here as soon as it has painted, or it stays behind
+    /// forever.
     fn waiting_to_be_born(&self) -> bool {
         self.asked_for && !self.painted
     }
 }
 
-/// Encaje: encoger, nunca agrandar. Agrandar miente — pone un diagrama de tres
-/// nodos al 128 % al lado de uno de veinte al 27 %.
+/// Fit: shrink, never enlarge. Enlarging lies — it puts a three-node diagram at
+/// 128 % next to a twenty-node one at 27 %.
 fn fit(natural: egui::Vec2, room: egui::Vec2) -> f32 {
     if natural.x <= 0.0 || natural.y <= 0.0 {
         return 1.0;
@@ -408,10 +413,10 @@ fn fit(natural: egui::Vec2, room: egui::Vec2) -> f32 {
 }
 
 impl eframe::App for Viewer {
-    /// Con la ventana oculta `eframe` no corre una pasada de egui, así que
-    /// **todo lo que no sea pintar vive aquí**: es lo único que sigue
-    /// llamándose cuando la ventana no está, y sin ello un ⌘W la dejaría sin
-    /// renacer nunca.
+    /// With the window hidden `eframe` does not run an egui pass, so
+    /// **everything that is not painting lives here**: it is the only thing that
+    /// keeps being called when the window is away, and without it a ⌘W would
+    /// leave it never to be reborn.
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         if ctx.input(|input| input.viewport().close_requested()) {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
@@ -440,12 +445,12 @@ impl eframe::App for Viewer {
 
         egui::Frame::central_panel(ui.style()).show(ui, |ui| {
             if self.session_over {
-                ui.heading("Sesión terminada");
-                ui.weak("La conversación que motivó esta pizarra ha acabado.");
+                ui.heading("Session over");
+                ui.weak("The conversation that prompted this flipchart has ended.");
                 return;
             }
             if self.deck.sheets.is_empty() {
-                ui.weak("La pizarra está vacía.");
+                ui.weak("The flipchart is empty.");
                 return;
             }
             self.header(ui);
@@ -464,7 +469,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn la_ventana_nace_con_el_primer_show() {
+    fn the_window_is_born_with_the_first_show() {
         let mut window = Window::default();
 
         window.a_show_arrived();
@@ -474,7 +479,7 @@ mod tests {
     }
 
     #[test]
-    fn el_primer_show_no_manda_delante_una_ventana_que_todavia_no_ha_pintado() {
+    fn the_first_show_does_not_front_a_window_that_has_not_painted_yet() {
         let mut window = Window::default();
 
         window.a_show_arrived();
@@ -483,7 +488,7 @@ mod tests {
     }
 
     #[test]
-    fn el_show_que_llego_antes_del_primer_frame_se_queda_pendiente() {
+    fn a_show_that_arrived_before_the_first_frame_stays_pending() {
         let mut window = Window::default();
 
         window.a_show_arrived();
@@ -493,15 +498,15 @@ mod tests {
     }
 
     #[test]
-    fn una_ventana_ya_delante_no_deja_nada_pendiente() {
-        let window = nacida();
+    fn a_window_already_at_the_front_leaves_nothing_pending() {
+        let window = born();
 
         assert!(!window.waiting_to_be_born());
     }
 
     #[test]
-    fn un_show_sobre_la_ventana_en_pie_no_la_vuelve_a_mandar_delante() {
-        let mut window = nacida();
+    fn a_show_on_a_standing_window_does_not_front_it_again() {
+        let mut window = born();
 
         window.a_show_arrived();
 
@@ -509,8 +514,8 @@ mod tests {
     }
 
     #[test]
-    fn tras_un_cmd_w_el_siguiente_show_hace_renacer_la_ventana_y_ahi_si_va_delante() {
-        let mut window = nacida();
+    fn after_a_cmd_w_the_next_show_reborns_the_window_and_there_it_does_go_to_the_front() {
+        let mut window = born();
 
         window.hidden();
         window.a_show_arrived();
@@ -519,15 +524,15 @@ mod tests {
     }
 
     #[test]
-    fn una_ventana_oculta_no_renace_sin_un_show() {
-        let mut window = nacida();
+    fn a_hidden_window_is_not_reborn_without_a_show() {
+        let mut window = born();
 
         window.hidden();
 
         assert!(!window.born());
     }
 
-    fn nacida() -> Window {
+    fn born() -> Window {
         let mut window = Window::default();
         window.a_show_arrived();
         window.a_frame_was_painted();
@@ -536,53 +541,53 @@ mod tests {
     }
 
     #[test]
-    fn una_hoja_que_no_cabe_se_encoge_hasta_caber() {
+    fn a_sheet_that_does_not_fit_shrinks_until_it_does() {
         let zoom = fit(egui::vec2(2400.0, 800.0), egui::vec2(1200.0, 800.0));
 
         assert_eq!(zoom, 0.5);
     }
 
     #[test]
-    fn una_hoja_que_cabe_se_deja_a_su_tamano_y_no_se_agranda() {
+    fn a_sheet_that_fits_is_left_at_its_size_and_is_not_enlarged() {
         let zoom = fit(egui::vec2(300.0, 200.0), egui::vec2(1200.0, 800.0));
 
         assert_eq!(zoom, 1.0);
     }
 
     #[test]
-    fn manda_el_lado_que_peor_cabe() {
+    fn the_side_that_fits_worst_rules() {
         let zoom = fit(egui::vec2(1200.0, 3200.0), egui::vec2(1200.0, 800.0));
 
         assert_eq!(zoom, 0.25);
     }
 
     #[test]
-    fn una_ventana_encogida_a_nada_no_pide_una_escala_de_cero() {
+    fn a_window_shrunk_to_nothing_does_not_ask_for_a_scale_of_zero() {
         let zoom = fit(egui::vec2(1200.0, 800.0), egui::vec2(1.0, 1.0));
 
         assert_eq!(zoom, MINIMUM_ZOOM);
     }
 
     #[test]
-    fn el_titulo_lleva_el_directorio_de_trabajo() {
-        let esperado = format!("Pizarra — {}", working_directory().unwrap());
+    fn the_title_carries_the_working_directory() {
+        let expected = format!("Flipchart — {}", working_directory().unwrap());
 
-        assert_eq!(title(), esperado);
+        assert_eq!(title(), expected);
     }
 
     #[test]
-    fn el_primer_show_es_el_que_saca_la_ventana_y_un_clear_solo_no_la_saca() {
+    fn the_first_show_is_what_brings_the_window_out_and_a_clear_alone_does_not() {
         let (viewer, commands) = wire();
-        viewer.send(pizarra(vec![], None));
-        viewer.send(pizarra(vec![dibujada(1, "actual")], Some(0)));
+        viewer.send(flipchart(vec![], None));
+        viewer.send(flipchart(vec![drawn(1, "current")], Some(0)));
 
-        let primera = wait_for_the_first_show(&commands).unwrap();
+        let first = wait_for_the_first_show(&commands).unwrap();
 
-        assert_eq!(primera.sheets.len(), 1);
+        assert_eq!(first.sheets.len(), 1);
     }
 
     #[test]
-    fn una_sesion_que_muere_sin_dibujar_nada_no_abre_ventana() {
+    fn a_session_that_dies_without_drawing_anything_opens_no_window() {
         let (viewer, commands) = wire();
         drop(viewer);
 
@@ -590,14 +595,14 @@ mod tests {
     }
 
     #[test]
-    fn una_sesion_que_termina_antes_del_primer_show_no_abre_ventana_para_despedirse() {
+    fn a_session_that_ends_before_the_first_show_opens_no_window_to_say_goodbye() {
         let (viewer, commands) = wire();
         viewer.say_goodbye();
 
         assert!(wait_for_the_first_show(&commands).is_none());
     }
 
-    fn dibujada(number: u64, id: &str) -> Drawn {
+    fn drawn(number: u64, id: &str) -> Drawn {
         Drawn {
             number,
             id: id.to_string(),
@@ -605,129 +610,129 @@ mod tests {
         }
     }
 
-    fn pizarra(sheets: Vec<Drawn>, front: Option<usize>) -> DeckSnapshot {
+    fn flipchart(sheets: Vec<Drawn>, front: Option<usize>) -> DeckSnapshot {
         DeckSnapshot { sheets, front }
     }
 
-    fn tres_hojas() -> Deck {
+    fn three_sheets() -> Deck {
         let mut deck = Deck::default();
-        deck.accept(&pizarra(
+        deck.accept(&flipchart(
             vec![
-                dibujada(1, "actual"),
-                dibujada(2, "variante A"),
-                dibujada(3, "variante B"),
+                drawn(1, "current"),
+                drawn(2, "variant A"),
+                drawn(3, "variant B"),
             ],
             Some(2),
         ));
         deck
     }
 
-    fn mirando(deck: &Deck) -> &str {
-        &deck.showing().expect("hay una hoja delante").id
+    fn looking_at(deck: &Deck) -> &str {
+        &deck.showing().expect("there is a sheet at the front").id
     }
 
     #[test]
-    fn el_show_deja_su_hoja_delante() {
-        let deck = tres_hojas();
+    fn a_show_leaves_its_sheet_at_the_front() {
+        let deck = three_sheets();
 
-        assert_eq!(mirando(&deck), "variante B");
+        assert_eq!(looking_at(&deck), "variant B");
     }
 
     #[test]
-    fn la_flecha_de_atras_retrocede_una_hoja() {
-        let mut deck = tres_hojas();
+    fn the_back_arrow_steps_back_one_sheet() {
+        let mut deck = three_sheets();
 
         deck.back();
 
-        assert_eq!(mirando(&deck), "variante A");
+        assert_eq!(looking_at(&deck), "variant A");
     }
 
     #[test]
-    fn la_flecha_de_adelante_vuelve_a_la_hoja_siguiente() {
-        let mut deck = tres_hojas();
+    fn the_forward_arrow_returns_to_the_next_sheet() {
+        let mut deck = three_sheets();
         deck.back();
 
         deck.forward();
 
-        assert_eq!(mirando(&deck), "variante B");
+        assert_eq!(looking_at(&deck), "variant B");
     }
 
     #[test]
-    fn la_primera_hoja_no_tiene_anterior() {
-        let mut deck = tres_hojas();
+    fn the_first_sheet_has_no_previous() {
+        let mut deck = three_sheets();
 
         deck.back();
         deck.back();
         deck.back();
 
-        assert_eq!(mirando(&deck), "actual");
+        assert_eq!(looking_at(&deck), "current");
     }
 
     #[test]
-    fn la_ultima_hoja_no_tiene_siguiente() {
-        let mut deck = tres_hojas();
+    fn the_last_sheet_has_no_next() {
+        let mut deck = three_sheets();
 
         deck.forward();
 
-        assert_eq!(mirando(&deck), "variante B");
+        assert_eq!(looking_at(&deck), "variant B");
     }
 
     #[test]
-    fn el_siguiente_show_pisa_el_cursor_del_usuario() {
-        let mut deck = tres_hojas();
+    fn the_next_show_overwrites_the_users_cursor() {
+        let mut deck = three_sheets();
         deck.back();
         deck.back();
 
-        deck.accept(&pizarra(
+        deck.accept(&flipchart(
             vec![
-                dibujada(1, "actual"),
-                dibujada(2, "variante A"),
-                dibujada(3, "variante B"),
-                dibujada(4, "variante C"),
+                drawn(1, "current"),
+                drawn(2, "variant A"),
+                drawn(3, "variant B"),
+                drawn(4, "variant C"),
             ],
             Some(3),
         ));
 
-        assert_eq!(mirando(&deck), "variante C");
+        assert_eq!(looking_at(&deck), "variant C");
     }
 
     #[test]
-    fn retirar_una_hoja_que_no_se_miraba_deja_al_usuario_donde_estaba() {
-        let mut deck = tres_hojas();
+    fn removing_a_sheet_that_was_not_being_looked_at_leaves_the_user_where_they_were() {
+        let mut deck = three_sheets();
         deck.back();
 
-        deck.accept(&pizarra(
-            vec![dibujada(2, "variante A"), dibujada(3, "variante B")],
+        deck.accept(&flipchart(
+            vec![drawn(2, "variant A"), drawn(3, "variant B")],
             Some(1),
         ));
 
-        assert_eq!(mirando(&deck), "variante A");
+        assert_eq!(looking_at(&deck), "variant A");
     }
 
     #[test]
-    fn retirar_la_hoja_que_se_miraba_pasa_a_la_que_va_delante() {
-        let mut deck = tres_hojas();
+    fn removing_the_sheet_being_looked_at_moves_to_the_one_at_the_front() {
+        let mut deck = three_sheets();
         deck.back();
 
-        deck.accept(&pizarra(
-            vec![dibujada(1, "actual"), dibujada(3, "variante B")],
+        deck.accept(&flipchart(
+            vec![drawn(1, "current"), drawn(3, "variant B")],
             Some(1),
         ));
 
-        assert_eq!(mirando(&deck), "variante B");
+        assert_eq!(looking_at(&deck), "variant B");
     }
 
     #[test]
-    fn una_hoja_viva_conserva_lo_que_ya_tenia_dibujado() {
-        let mut deck = tres_hojas();
+    fn a_live_sheet_keeps_what_it_already_had_drawn() {
+        let mut deck = three_sheets();
         deck.sheets[0].natural = Some(egui::vec2(300.0, 200.0));
 
-        deck.accept(&pizarra(
+        deck.accept(&flipchart(
             vec![
-                dibujada(1, "actual"),
-                dibujada(2, "variante A"),
-                dibujada(3, "variante B"),
-                dibujada(4, "variante C"),
+                drawn(1, "current"),
+                drawn(2, "variant A"),
+                drawn(3, "variant B"),
+                drawn(4, "variant C"),
             ],
             Some(3),
         ));
@@ -736,15 +741,15 @@ mod tests {
     }
 
     #[test]
-    fn reemplazar_una_vista_da_una_hoja_nueva_que_se_vuelve_a_dibujar() {
-        let mut deck = tres_hojas();
+    fn replacing_a_view_gives_a_new_sheet_that_gets_drawn_again() {
+        let mut deck = three_sheets();
         deck.sheets[0].natural = Some(egui::vec2(300.0, 200.0));
 
-        deck.accept(&pizarra(
+        deck.accept(&flipchart(
             vec![
-                dibujada(4, "actual"),
-                dibujada(2, "variante A"),
-                dibujada(3, "variante B"),
+                drawn(4, "current"),
+                drawn(2, "variant A"),
+                drawn(3, "variant B"),
             ],
             Some(0),
         ));
@@ -753,10 +758,10 @@ mod tests {
     }
 
     #[test]
-    fn la_pizarra_vaciada_se_queda_sin_hojas_que_ensenar() {
-        let mut deck = tres_hojas();
+    fn the_emptied_flipchart_is_left_with_no_sheets_to_show() {
+        let mut deck = three_sheets();
 
-        deck.accept(&pizarra(vec![], None));
+        deck.accept(&flipchart(vec![], None));
 
         assert!(deck.showing().is_none());
     }

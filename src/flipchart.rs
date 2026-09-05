@@ -3,8 +3,8 @@ use crate::viewer::{DeckSnapshot, Drawn, Wire};
 
 const MAX_VIEW_ID_CHARS: usize = 64;
 
-/// Una Vista viva. `drawn` la numera en el momento en que se dibujó, así que
-/// **la mayor es la del `show` vivo más reciente**: la que va delante.
+/// A live View. `drawn` numbers it at the moment it was drawn, so **the highest
+/// is the one from the most recent live `show`**: the one at the front.
 #[derive(Debug)]
 struct View {
     id: String,
@@ -99,8 +99,9 @@ impl Flipchart {
         format!("Cleared view \"{id}\". {}", self.views_on_the_flipchart())
     }
 
-    /// El orden es el de creación y la de delante es la del `show` vivo más
-    /// reciente. Las dos las decide aquí el Servidor MCP, no el Visor.
+    /// The order is the order of creation and the front one is the one from the
+    /// most recent live `show`. Both are decided here by the MCP server, not by
+    /// the Viewer.
     fn hand_the_deck_over(&mut self) {
         self.viewer.send(DeckSnapshot {
             sheets: self
@@ -164,25 +165,25 @@ mod tests {
     use super::*;
     use crate::viewer::{Command, Commands, wire};
 
-    const DOS_NODOS: &str = "flowchart LR\n  A[Uno] --> B[Dos]\n";
-    const TRES_NODOS: &str = "flowchart LR\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
-    const TRES_NODOS_HACIA_ABAJO: &str = "flowchart TB\n  A[Uno] --> B[Dos]\n  B --> C[Tres]\n";
-    const UN_NODO: &str = "flowchart LR\n  A[Solo]\n";
+    const TWO_NODES: &str = "flowchart LR\n  A[One] --> B[Two]\n";
+    const THREE_NODES: &str = "flowchart LR\n  A[One] --> B[Two]\n  B --> C[Three]\n";
+    const THREE_NODES_DOWNWARDS: &str = "flowchart TB\n  A[One] --> B[Two]\n  B --> C[Three]\n";
+    const ONE_NODE: &str = "flowchart LR\n  A[Alone]\n";
 
-    fn pizarra() -> (Flipchart, Commands) {
+    fn flipchart() -> (Flipchart, Commands) {
         let (viewer, commands) = wire();
         (Flipchart::new(viewer), commands)
     }
 
-    fn cruzada(commands: &Commands) -> DeckSnapshot {
+    fn handed_over(commands: &Commands) -> DeckSnapshot {
         let mut last = None;
         while let Some(Command::Show(snapshot)) = commands.try_recv() {
             last = Some(snapshot);
         }
-        last.expect("al Visor le cruzó una pizarra")
+        last.expect("a flipchart reached the Viewer")
     }
 
-    fn nombres(snapshot: &DeckSnapshot) -> Vec<&str> {
+    fn names(snapshot: &DeckSnapshot) -> Vec<&str> {
         snapshot
             .sheets
             .iter()
@@ -190,359 +191,361 @@ mod tests {
             .collect()
     }
 
-    fn delante(snapshot: &DeckSnapshot) -> &str {
-        let front = snapshot.front.expect("hay una hoja delante");
+    fn front(snapshot: &DeckSnapshot) -> &str {
+        let front = snapshot.front.expect("there is a sheet at the front");
         &snapshot.sheets[front].id
     }
 
     #[test]
-    fn el_acuse_lleva_el_id_el_recuento_y_las_vistas_vivas() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn the_acknowledgement_carries_the_id_the_recount_and_the_live_views() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        let acuse = flipchart.show("propuesto", TRES_NODOS).unwrap();
+        let acknowledgement = flipchart.show("proposed", THREE_NODES).unwrap();
 
         assert_eq!(
-            acuse,
-            "Shown as view \"propuesto\" (3 nodes, 2 edges). \
-             Views on the flipchart: actual, propuesto."
+            acknowledgement,
+            "Shown as view \"proposed\" (3 nodes, 2 edges). \
+             Views on the flipchart: current, proposed."
         );
     }
 
     #[test]
-    fn el_recuento_va_en_singular_cuando_hay_uno_de_cada() {
-        let (mut flipchart, _commands) = pizarra();
+    fn the_recount_goes_singular_when_there_is_one_of_each() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let acuse = flipchart.show("solo", DOS_NODOS);
+        let acknowledgement = flipchart.show("alone", TWO_NODES);
 
-        assert!(acuse.unwrap().contains("(2 nodes, 1 edge)"));
+        assert!(acknowledgement.unwrap().contains("(2 nodes, 1 edge)"));
     }
 
     #[test]
-    fn una_vista_sin_aristas_cuenta_cero() {
-        let (mut flipchart, _commands) = pizarra();
+    fn a_view_with_no_edges_counts_zero() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let acuse = flipchart.show("solo", UN_NODO);
+        let acknowledgement = flipchart.show("alone", ONE_NODE);
 
-        assert!(acuse.unwrap().contains("(1 node, 0 edges)"));
+        assert!(acknowledgement.unwrap().contains("(1 node, 0 edges)"));
     }
 
     #[test]
-    fn reusar_un_id_reemplaza_la_vista_sin_moverla_de_sitio() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
+    fn reusing_an_id_replaces_the_view_without_moving_it() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
 
-        let acuse = flipchart.show("actual", TRES_NODOS).unwrap();
+        let acknowledgement = flipchart.show("current", THREE_NODES).unwrap();
 
-        assert!(acuse.ends_with("Views on the flipchart: actual, propuesto."));
+        assert!(acknowledgement.ends_with("Views on the flipchart: current, proposed."));
     }
 
     #[test]
-    fn reusar_un_id_se_queda_con_el_diagrama_nuevo() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn reusing_an_id_keeps_the_new_diagram() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        flipchart.show("actual", TRES_NODOS).unwrap();
+        flipchart.show("current", THREE_NODES).unwrap();
 
-        assert_eq!(flipchart.view("actual"), Some(TRES_NODOS));
+        assert_eq!(flipchart.view("current"), Some(THREE_NODES));
     }
 
     #[test]
-    fn el_visor_se_entera_de_la_vista_mostrada() {
-        let (mut flipchart, commands) = pizarra();
+    fn the_viewer_learns_about_the_shown_view() {
+        let (mut flipchart, commands) = flipchart();
 
-        flipchart.show("actual", DOS_NODOS).unwrap();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        assert_eq!(nombres(&cruzada(&commands)), ["actual"]);
+        assert_eq!(names(&handed_over(&commands)), ["current"]);
     }
 
     #[test]
-    fn al_visor_le_cruza_el_svg_ya_dibujado() {
-        let (mut flipchart, commands) = pizarra();
+    fn what_reaches_the_viewer_is_the_already_drawn_svg() {
+        let (mut flipchart, commands) = flipchart();
 
-        flipchart.show("actual", DOS_NODOS).unwrap();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        let svg = &cruzada(&commands).sheets[0].svg;
+        let svg = &handed_over(&commands).sheets[0].svg;
         assert!(svg.starts_with("<svg"));
-        assert!(svg.contains("Uno"));
+        assert!(svg.contains("One"));
     }
 
     #[test]
-    fn las_hojas_cruzan_en_orden_de_creacion_y_reemplazar_no_reordena() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
+    fn the_sheets_arrive_in_creation_order_and_replacing_does_not_reorder() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
 
-        flipchart.show("actual", TRES_NODOS).unwrap();
+        flipchart.show("current", THREE_NODES).unwrap();
 
-        assert_eq!(nombres(&cruzada(&commands)), ["actual", "propuesto"]);
+        assert_eq!(names(&handed_over(&commands)), ["current", "proposed"]);
     }
 
     #[test]
-    fn el_show_deja_su_vista_delante() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
+    fn a_show_leaves_its_view_at_the_front() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
 
-        flipchart.show("actual", TRES_NODOS).unwrap();
+        flipchart.show("current", THREE_NODES).unwrap();
 
-        assert_eq!(delante(&cruzada(&commands)), "actual");
+        assert_eq!(front(&handed_over(&commands)), "current");
     }
 
     #[test]
-    fn reemplazar_una_vista_manda_una_hoja_nueva() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        let primera = cruzada(&commands).sheets[0].number;
+    fn replacing_a_view_sends_a_new_sheet() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        let first = handed_over(&commands).sheets[0].number;
 
-        flipchart.show("actual", TRES_NODOS).unwrap();
+        flipchart.show("current", THREE_NODES).unwrap();
 
-        assert_ne!(cruzada(&commands).sheets[0].number, primera);
+        assert_ne!(handed_over(&commands).sheets[0].number, first);
     }
 
     #[test]
-    fn retirar_la_vista_de_delante_pasa_a_la_del_show_vivo_mas_reciente() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
-        flipchart.show("flujo", DOS_NODOS).unwrap();
+    fn removing_the_front_view_falls_back_to_the_most_recent_live_show() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
+        flipchart.show("flow", TWO_NODES).unwrap();
 
-        flipchart.clear(Some("flujo"));
+        flipchart.clear(Some("flow"));
 
-        assert_eq!(delante(&cruzada(&commands)), "propuesto");
+        assert_eq!(front(&handed_over(&commands)), "proposed");
     }
 
     #[test]
-    fn retirar_otra_vista_deja_delante_la_que_ya_lo_estaba() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
+    fn removing_another_view_leaves_at_the_front_the_one_already_there() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
 
-        flipchart.clear(Some("actual"));
+        flipchart.clear(Some("current"));
 
-        assert_eq!(delante(&cruzada(&commands)), "propuesto");
+        assert_eq!(front(&handed_over(&commands)), "proposed");
     }
 
     #[test]
-    fn vaciar_la_pizarra_cruza_una_pizarra_sin_hojas() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn emptying_the_flipchart_hands_over_a_flipchart_with_no_sheets() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
         flipchart.clear(None);
 
-        assert!(cruzada(&commands).sheets.is_empty());
+        assert!(handed_over(&commands).sheets.is_empty());
     }
 
     #[test]
-    fn una_pizarra_sin_hojas_no_tiene_ninguna_delante() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn a_flipchart_with_no_sheets_has_none_at_the_front() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
         flipchart.clear(None);
 
-        assert_eq!(cruzada(&commands).front, None);
+        assert_eq!(handed_over(&commands).front, None);
     }
 
     #[test]
-    fn borrar_un_id_que_no_existe_no_le_cuenta_nada_al_visor() {
-        let (mut flipchart, commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        cruzada(&commands);
+    fn clearing_an_id_that_does_not_exist_tells_the_viewer_nothing() {
+        let (mut flipchart, commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        handed_over(&commands);
 
-        flipchart.clear(Some("propeusto"));
+        flipchart.clear(Some("propsoed"));
 
         assert!(commands.try_recv().is_none());
     }
 
     #[test]
-    fn un_view_id_en_blanco_se_rechaza() {
-        let (mut flipchart, _commands) = pizarra();
+    fn a_blank_view_id_is_rejected() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart.show("   ", DOS_NODOS).unwrap_err();
+        let rejection = flipchart.show("   ", TWO_NODES).unwrap_err();
 
-        assert!(rechazo.contains("view_id must not be empty."));
+        assert!(rejection.contains("view_id must not be empty."));
     }
 
     #[test]
-    fn un_view_id_de_mas_de_64_caracteres_se_rechaza() {
-        let (mut flipchart, _commands) = pizarra();
+    fn a_view_id_longer_than_64_characters_is_rejected() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart.show(&"a".repeat(65), DOS_NODOS).unwrap_err();
+        let rejection = flipchart.show(&"a".repeat(65), TWO_NODES).unwrap_err();
 
-        assert!(rechazo.contains("view_id must be at most 64 characters; got 65."));
+        assert!(rejection.contains("view_id must be at most 64 characters; got 65."));
     }
 
     #[test]
-    fn un_view_id_de_64_caracteres_entra() {
-        let (mut flipchart, _commands) = pizarra();
+    fn a_view_id_of_64_characters_goes_in() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let acuse = flipchart.show(&"a".repeat(64), DOS_NODOS);
+        let acknowledgement = flipchart.show(&"a".repeat(64), TWO_NODES);
 
-        assert!(acuse.is_ok());
+        assert!(acknowledgement.is_ok());
     }
 
     #[test]
-    fn el_view_id_es_prosa_y_no_un_slug() {
-        let (mut flipchart, _commands) = pizarra();
+    fn the_view_id_is_prose_and_not_a_slug() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let acuse = flipchart
-            .show("Estructura actual (v2), ¿sí?", DOS_NODOS)
+        let acknowledgement = flipchart
+            .show("Current structure (v2) — really?", TWO_NODES)
             .unwrap();
 
-        assert!(acuse.starts_with("Shown as view \"Estructura actual (v2), ¿sí?\""));
+        assert!(acknowledgement.starts_with("Shown as view \"Current structure (v2) — really?\""));
     }
 
     #[test]
-    fn el_view_id_se_guarda_recortado() {
-        let (mut flipchart, _commands) = pizarra();
+    fn the_view_id_is_stored_trimmed() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let acuse = flipchart.show("  actual  ", DOS_NODOS).unwrap();
+        let acknowledgement = flipchart.show("  current  ", TWO_NODES).unwrap();
 
-        assert!(acuse.starts_with("Shown as view \"actual\""));
+        assert!(acknowledgement.starts_with("Shown as view \"current\""));
     }
 
     #[test]
-    fn un_diagrama_vacio_se_rechaza() {
-        let (mut flipchart, _commands) = pizarra();
+    fn an_empty_diagram_is_rejected() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart.show("actual", "  \n ").unwrap_err();
+        let rejection = flipchart.show("current", "  \n ").unwrap_err();
 
-        assert!(rechazo.contains("diagram must not be empty."));
+        assert!(rejection.contains("diagram must not be empty."));
     }
 
     #[test]
-    fn la_entrada_se_valida_antes_de_parsear() {
-        let (mut flipchart, _commands) = pizarra();
+    fn the_input_is_validated_before_parsing() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart.show("", "esto no es Mermaid").unwrap_err();
+        let rejection = flipchart.show("", "this is not Mermaid").unwrap_err();
 
-        assert!(rechazo.contains("view_id must not be empty."));
+        assert!(rejection.contains("view_id must not be empty."));
     }
 
     #[test]
-    fn un_rechazo_deja_intacta_la_vista_que_ya_habia() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn a_rejection_leaves_the_view_that_was_already_there_intact() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        flipchart.show("actual", "").unwrap_err();
+        flipchart.show("current", "").unwrap_err();
 
-        assert_eq!(flipchart.view("actual"), Some(DOS_NODOS));
+        assert_eq!(flipchart.view("current"), Some(TWO_NODES));
     }
 
     #[test]
-    fn el_rechazo_abre_con_la_linea_fija() {
-        let (mut flipchart, _commands) = pizarra();
+    fn the_rejection_opens_with_the_fixed_line() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart.show("actual", "").unwrap_err();
+        let rejection = flipchart.show("current", "").unwrap_err();
 
         assert!(
-            rechazo.starts_with("Rejected: nothing was drawn; view \"actual\" is unchanged.\n")
+            rejection.starts_with("Rejected: nothing was drawn; view \"current\" is unchanged.\n")
         );
     }
 
     #[test]
-    fn borrar_una_vista_la_dice_y_lista_lo_que_queda() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
+    fn clearing_a_view_says_so_and_lists_what_is_left() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
 
-        let texto = flipchart.clear(Some("propuesto"));
+        let text = flipchart.clear(Some("proposed"));
 
         assert_eq!(
-            texto,
-            "Cleared view \"propuesto\". Views on the flipchart: actual."
+            text,
+            "Cleared view \"proposed\". Views on the flipchart: current."
         );
     }
 
     #[test]
-    fn borrar_la_ultima_vista_deja_la_pizarra_sin_vistas() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn clearing_the_last_view_leaves_the_flipchart_with_no_views() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        let texto = flipchart.clear(Some("actual"));
+        let text = flipchart.clear(Some("current"));
 
-        assert_eq!(texto, "Cleared view \"actual\". No views.");
+        assert_eq!(text, "Cleared view \"current\". No views.");
     }
 
     #[test]
-    fn borrar_la_pizarra_entera_lo_dice() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn clearing_the_whole_flipchart_says_so() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        let texto = flipchart.clear(None);
+        let text = flipchart.clear(None);
 
-        assert_eq!(texto, "Cleared the flipchart. No views.");
+        assert_eq!(text, "Cleared the flipchart. No views.");
     }
 
     #[test]
-    fn borrar_un_id_que_no_existe_no_es_error_y_lleva_la_lista_al_lado() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
-        flipchart.show("propuesto", DOS_NODOS).unwrap();
+    fn clearing_an_id_that_does_not_exist_is_not_an_error_and_carries_the_list_alongside() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
+        flipchart.show("proposed", TWO_NODES).unwrap();
 
-        let texto = flipchart.clear(Some("propeusto"));
+        let text = flipchart.clear(Some("propsoed"));
 
         assert_eq!(
-            texto,
-            "No view \"propeusto\" on the flipchart. Views: actual, propuesto."
+            text,
+            "No view \"propsoed\" on the flipchart. Views: current, proposed."
         );
     }
 
     #[test]
-    fn borrar_un_id_que_no_existe_no_toca_las_vistas() {
-        let (mut flipchart, _commands) = pizarra();
-        flipchart.show("actual", DOS_NODOS).unwrap();
+    fn clearing_an_id_that_does_not_exist_does_not_touch_the_views() {
+        let (mut flipchart, _commands) = flipchart();
+        flipchart.show("current", TWO_NODES).unwrap();
 
-        flipchart.clear(Some("propeusto"));
+        flipchart.clear(Some("propsoed"));
 
-        assert_eq!(flipchart.view("actual"), Some(DOS_NODOS));
+        assert_eq!(flipchart.view("current"), Some(TWO_NODES));
     }
 
     #[test]
-    fn borrar_la_pizarra_ya_vacia_lo_dice() {
-        let (mut flipchart, _commands) = pizarra();
+    fn clearing_an_already_empty_flipchart_says_so() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let texto = flipchart.clear(None);
+        let text = flipchart.clear(None);
 
-        assert_eq!(texto, "The flipchart was already empty.");
+        assert_eq!(text, "The flipchart was already empty.");
     }
 
     #[test]
-    fn el_acuse_arrastra_los_avisos_detras() {
-        let (mut flipchart, _commands) = pizarra();
+    fn the_acknowledgement_drags_the_notes_behind_it() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let acuse = flipchart.show("actual", TRES_NODOS_HACIA_ABAJO).unwrap();
+        let acknowledgement = flipchart.show("current", THREE_NODES_DOWNWARDS).unwrap();
 
         assert_eq!(
-            acuse,
-            "Shown as view \"actual\" (3 nodes, 2 edges). Views on the flipchart: actual.\n\
+            acknowledgement,
+            "Shown as view \"current\" (3 nodes, 2 edges). Views on the flipchart: current.\n\
              Note: the flipchart lays diagrams out left to right; the direction in your \
              source was ignored. The view was drawn."
         );
     }
 
     #[test]
-    fn un_rechazo_no_lleva_avisos() {
-        let (mut flipchart, _commands) = pizarra();
+    fn a_rejection_carries_no_notes() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart
+        let rejection = flipchart
             .show(
-                "actual",
-                "flowchart TB\n  classDef danger fill:#f00\n  A[Uno] --> Db\n",
+                "current",
+                "flowchart TB\n  classDef danger fill:#f00\n  A[One] --> Db\n",
             )
             .unwrap_err();
 
-        assert!(!rechazo.contains("Note:"));
+        assert!(!rejection.contains("Note:"));
     }
 
     #[test]
-    fn un_diagrama_que_no_parsea_se_rechaza_sin_tocar_la_pizarra() {
-        let (mut flipchart, _commands) = pizarra();
+    fn a_diagram_that_does_not_parse_is_rejected_without_touching_the_flipchart() {
+        let (mut flipchart, _commands) = flipchart();
 
-        let rechazo = flipchart.show("actual", "esto no es Mermaid").unwrap_err();
+        let rejection = flipchart
+            .show("current", "this is not Mermaid")
+            .unwrap_err();
 
-        assert!(rechazo.starts_with("Rejected: nothing was drawn;"));
-        assert_eq!(flipchart.view("actual"), None);
+        assert!(rejection.starts_with("Rejected: nothing was drawn;"));
+        assert_eq!(flipchart.view("current"), None);
     }
 }
