@@ -44,7 +44,7 @@ re-measuring this.**
   agent touches something up, while the user is typing in the terminal, is intolerable.
 - And like any window of an app that is not active, **the flipchart goes behind as soon as
   the user activates their terminal**; the next `show` does not bring it back.
-- **The title carries the session's working directory** — `Flipchart — ai-render` —, which is
+- **The title carries the session's working directory** — `Flipchart — flipchart` —, which is
   what the user has in mind when looking at two terminals.
 
 **Closing the window hides, it does not kill.** In `eframe`, closing the window terminates

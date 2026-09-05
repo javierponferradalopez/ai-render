@@ -19,7 +19,7 @@ It installs as a Claude Code plugin, and that is the only install path
 Claude Code:
 
 ```
-/plugin marketplace add https://raw.githubusercontent.com/javierponferradalopez/ai-render/main/marketplace.json
+/plugin marketplace add https://raw.githubusercontent.com/javierponferradalopez/flipchart/main/marketplace.json
 /plugin install flipchart@flipchart
 ```
 

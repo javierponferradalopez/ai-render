@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues live as GitHub issues in `javierponferradalopez/ai-render`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live as GitHub issues in `javierponferradalopez/flipchart`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 

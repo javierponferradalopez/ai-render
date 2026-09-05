@@ -26,7 +26,7 @@ die() {
 [ $# -ge 2 ] || die 'usage: catalog.sh <tag> <zip> [repo]'
 readonly TAG=$1
 readonly ZIP=$2
-readonly REPO=${3:-${GITHUB_REPOSITORY:-javierponferradalopez/ai-render}}
+readonly REPO=${3:-${GITHUB_REPOSITORY:-javierponferradalopez/flipchart}}
 readonly VERSION=${TAG#v}
 
 [ -f "$ZIP" ] || die "there is no zip at $ZIP"
