@@ -1,175 +1,186 @@
-# Pizarra efímera para agentes
+# Ephemeral flipchart for agents
 
-Un canal visual temporal para que un agente de IA se explique. El agente expresa
-significado —qué hay y cómo se relaciona— y el sistema decide cómo se ve; nunca
-al revés.
+A temporary visual channel for an AI agent to explain itself. The agent expresses
+meaning —what there is and how it relates— and the system decides how it looks;
+never the other way round.
 
 ## Language
 
-### El canal
+### The channel
 
-**Pizarra** — `flipchart` en código:
-El canal visual temporal en su conjunto. Existe para que el usuario entienda lo
-que el agente está diciendo, no para guardar lo que el agente dibuja. Guarda N
-Vistas y el Visor enseña una cada vez, sin índice de las demás, así que el nombre
-inglés —provisional— acierta con la metáfora: un rotafolio es exactamente eso.
-Quién pasa la hoja es el agente, porque la Pizarra es su canal para explicarse; el
-usuario puede retroceder una hoja, y para cualquier otra cosa se lo pide. Abrirla no se
-pregunta: la abre el primer show, sin permiso y **sin robar el teclado** — la ventana se pone
-delante y el foco se queda donde el usuario lo tenía. Lo que sí depende de fuera es que llegue
-a haber un primer show — medido, el agente no la ofrece nunca y no la usa hasta que se le pide
-o se le manda.
-_Avoid_: canvas (en español), lienzo, board, tablero; y como identificadores,
-`canvas`, `board` o `whiteboard`
+**Flipchart** — `flipchart` in code:
+The temporary visual channel as a whole. It exists so the user understands what the
+agent is saying, not to keep what the agent draws. It holds N Views and the Viewer
+shows one at a time, with no index of the others, so the name is the metaphor
+itself: a flipchart is exactly that. The one who turns the page is the agent,
+because the flipchart is its channel for explaining itself; the user can go back one
+page, and for anything else asks for it. Opening it is not asked: the first show
+opens it, without permission and **without stealing the keyboard** — the window
+comes to the front and focus stays where the user had it. What does depend on the
+outside is that a first show happens at all — measured, the agent never offers it
+and does not use it until asked or told.
+_Avoid_: canvas, board, whiteboard; and as identifiers, `canvas`, `board` or
+`whiteboard`
 
-**Apertura pedida**:
-El permiso que la Pizarra iba a pedirle al usuario antes del primer show de la sesión —el
-que hace aparecer la ventana, y que cuando esto se decidió le robaba además el foco—. **No existe, y el término se conserva para
-que no se reinvente.** Medido, no ocurría: el agente anuncia y dibuja, y no espera ningún sí.
-Era cortesía declarada y no mecanismo —nada en el protocolo distingue el show pedido del que
-no lo fue—, y se retiró al ver que lo que quería comprar ya lo compra ese anuncio, gratis. Lo
-que queda en su lugar es un consentimiento anterior y de mejor calidad: la ventana sólo
-aparece porque el usuario la pidió, o porque él mismo puso la instrucción que la manda.
-_Avoid_: permiso, consentimiento, opt-in, confirmación
+**Permission to open**:
+The permission the flipchart was going to ask the user for before the session's
+first show —the one that makes the window appear, and that back when this was
+decided also stole focus—. **It does not exist, and the term is kept so that it does
+not get reinvented.** Measured, it never happened: the agent announces and draws,
+and waits for no yes. It was declared courtesy and not mechanism —nothing in the
+protocol tells an asked-for show from one that was not— and it was withdrawn once
+we saw that what it wanted to buy is already bought by that announcement, for free.
+What stands in its place is an earlier consent of better quality: the window only
+appears because the user asked for it, or because the user themself put in the
+instruction that commands it.
+_Avoid_: permission on its own, consent, opt-in, confirmation
 
-**Efímero**:
-Que muere con la sesión MCP, no con la disciplina del agente. Un artefacto
-efímero no se guarda, no se exporta y no sobrevive a la sesión MCP que lo
-motivó. Una sesión MCP **no** es una conversación: `/clear` acaba la conversación
-y deja viva la sesión, así que la pizarra le sobrevive.
-_Avoid_: temporal, volátil
+**Ephemeral**:
+That it dies with the MCP session, not with the agent's discipline. An ephemeral
+artifact is not saved, is not exported and does not outlive the MCP session that
+motivated it. An MCP session is **not** a conversation: `/clear` ends the
+conversation and leaves the session alive, so the flipchart outlives it.
+_Avoid_: temporary, volatile
 
-**Vista**:
-Una de las N representaciones con nombre que conviven en la pizarra a la vez —
-"actual" junto a "propuesto", o un diagrama de clases junto a un flujo. Se
-identifica por su `id`, y volver a mostrarla sobre ese `id` la reemplaza. Ese `id`
-es además su nombre visible: no hay un segundo título, así que el nombre que el
-agente dice en voz alta y el que ve el usuario son el mismo.
-_Avoid_: diagrama, escena, tab, pestaña
+**View**:
+One of the N named representations that coexist on the flipchart at once —
+"current" next to "proposed", or a class diagram next to a flow. It is identified by
+its `id`, and showing over that `id` again replaces it. That `id` is also its
+visible name: there is no second title, so the name the agent says out loud and the
+one the user sees are the same.
+_Avoid_: diagram, scene, tab
 
-### Las capas
+### The layers
 
 **Visual Protocol**:
-El subconjunto de Mermaid que el agente tiene permitido escribir: significado
-—nodos, relaciones, contención— con todos los ids declarados y sin nada que pida
-píxeles. Es la frontera que el agente nunca cruza hacia abajo.
-_Avoid_: formato, payload, DSL, y "Mermaid" a secas — el idioma entero no es el
-protocolo
+The subset of Mermaid the agent is allowed to write: meaning —nodes, relationships,
+containment— with every id declared and nothing that asks for pixels. It is the
+boundary the agent never crosses downwards.
+_Avoid_: format, payload, DSL, and "Mermaid" on its own — the whole language is not
+the protocol
 
 **VisualDocument**:
-El estado semántico completo de una Vista, escrito en el Visual Protocol y
-conservado tal cual. Es la verdad de la Vista, no una copia de algo anterior.
-_Avoid_: modelo, escena, grafo, fuente
+The complete semantic state of a View, written in the Visual Protocol and kept as
+is. It is the truth of the View, not a copy of something earlier.
+_Avoid_: model, scene, graph, source
 
 **Layout Engine**:
-La pieza que decide dónde va cada cosa: toma un VisualDocument y produce una
-PositionedScene. Ni el agente ni el usuario participan en esa decisión, y no es
-sustituible — viene con el idioma en la misma pieza que lo entiende.
-_Avoid_: motor de posicionamiento, autolayout
+The piece that decides where everything goes: it takes a VisualDocument and produces
+a PositionedScene. Neither the agent nor the user takes part in that decision, and
+it is not swappable — it comes bundled with the language, in the same piece that
+understands it.
+_Avoid_: positioning engine, autolayout
 
 **PositionedScene**:
-Un VisualDocument con geometría ya resuelta: lo que queda cuando el Layout
-Engine ha hecho su trabajo y antes de que se pinte un solo píxel. Vive dentro del
-Servidor MCP y no cruza al Visor.
-_Avoid_: layout, escena posicionada
+A VisualDocument with geometry already resolved: what is left once the Layout Engine
+has done its work and before a single pixel is painted. It lives inside the MCP
+server and does not cross over to the Viewer.
+_Avoid_: layout, positioned scene
 
 **Drawing Surface**:
-Con qué se pinta finalmente dentro del visor. De qué está hecha es invisible para
-todo lo que hay aguas arriba, y no contradice la prohibición del Visual Protocol:
-lo prohibido es que el **agente** produzca HTML o caracteres de dibujo, no que
-existan.
-_Avoid_: renderer, canvas, pintor
+What the picture is finally painted with inside the viewer. What it is made of is
+invisible to everything upstream, and it does not contradict the Visual Protocol's
+prohibition: what is forbidden is that the **agent** produces HTML or drawing
+characters, not that they exist.
+_Avoid_: renderer, canvas, painter
 
 **Renderer**:
-Término contaminado: mezcla el Layout Engine con la Drawing Surface, que son
-etapas distintas aunque hoy lleguen en la misma pieza. Nombrar la que toca.
-_Avoid_: usar la palabra a secas
+A contaminated term: it blurs the Layout Engine with the Drawing Surface, which are
+distinct stages even though today they arrive in the same piece. Name the one you
+mean.
+_Avoid_: using the word on its own
 
-**Límite honesto**:
-La frontera que la pizarra no cruza dibujando: pasado ese punto no dibuja peor,
-se para y lo dice. Cubre el tamaño de Vista que ya no se lee, y también el
-significado que no se sostiene — dibujar una relación que no existe es peor que
-no dibujar nada. De ahí sale por dónde pasa: **lo que se ve de más se rechaza; lo
-que se ve de menos se dibuja y se avisa**. Y es nuestra, no del idioma ni de quien
-dibuja: la sostienen las reglas que miramos sobre lo ya parseado —el Nodo fantasma
-y el Nodo apócrifo—, medida que fue la del renderer y resultó no sostener nada.
-_Avoid_: límite a secas, truncado, degradación
+**Honest limit** — `honest_limit.rs` in code:
+The boundary the flipchart does not cross by drawing: past that point it does not
+draw worse, it stops and says so. It covers the View size that can no longer be
+read, and also the meaning that does not hold up — drawing a relationship that does
+not exist is worse than drawing nothing. From there comes where it runs: **what is
+seen in excess is rejected; what is seen short is drawn and warned about**. And it
+is ours, not the language's nor the drawer's: it is held up by the rules we apply to
+what has already been parsed —the Phantom node and the Apocryphal node—, having been
+measured as the renderer's and turned out to hold nothing up.
+_Avoid_: limit on its own, truncation, degradation
 
-**Nodo fantasma**:
-El nodo que el idioma inventa al ver un id que sólo aparece en una relación,
-mientras los demás del mismo diagrama sí traen etiqueta o cuerpo. Lo que engaña es
-la asimetría: sale vacío al lado de uno lleno, así que no se lee como el error que
-es sino como algo de lo que se sabe menos. Un diagrama entero de ids desnudos no
-tiene fantasmas —no promete nada que no cumpla—, y el Límite honesto existe para
-rechazar los que sí lo son. Es una de las dos causas del mismo rechazo, y la que se
-delata sola; la otra es el Nodo apócrifo.
-_Avoid_: nodo implícito, auto-creación, typo
+**Phantom node**:
+The node the language invents on seeing an id that only appears in a relationship,
+while the others in the same diagram do carry a label or a body. What deceives is
+the asymmetry: it comes out empty next to a full one, so it does not read as the
+error it is but as something we know less about. A whole diagram of bare ids has no
+phantoms —it promises nothing it does not deliver—, and the Honest limit exists to
+reject the ones that do. It is one of the two causes of the same rejection, and the
+one that gives itself away; the other is the Apocryphal node.
+_Avoid_: implicit node, auto-creation, typo
 
-**Nodo apócrifo**:
-El nodo cuyo id no está en ninguna parte del diagrama que escribió el agente: lo
-fabrica quien parsea al rendirse con una línea que no supo clasificar, y se lo
-atribuye a quien no lo escribió. Es el hermano del Nodo fantasma y el peor de los
-dos, porque **trae etiqueta**: el fantasma se ve por lo que le falta, y a éste no le
-falta nada. Los dos se rechazan igual y se cuentan juntos, pero no piden lo mismo —
-el fantasma se arregla declarando el id, el apócrifo reescribiendo la línea.
-_Avoid_: nodo por descarte, nodo inventado, alucinación, basura
+**Apocryphal node**:
+The node whose id is nowhere in the diagram the agent wrote: it is manufactured by
+whoever parses, on giving up on a line they could not classify, and attributed to
+someone who did not write it. It is the Phantom node's sibling and the worse of the
+two, because **it carries a label**: the phantom shows by what it lacks, and this
+one lacks nothing. Both are rejected alike and counted together, but they do not ask
+for the same thing — the phantom is fixed by declaring the id, the apocryphal one by
+rewriting the line.
+_Avoid_: fallback node, made-up node, hallucination, garbage
 
-**Marcado literal**:
-El marcado que el agente escribe dentro del texto de una etiqueta y que llega al
-dibujo tal como lo escribió: `<b>recolocacion</b>` en la caja, con los picos
-puestos. Es la cuarta cosa de la que la Pizarra avisa, y la única que no viaja en
-un campo del IR sino dentro de la etiqueta, así que el vaciado del estilo no lo
-toca. Su frontera no es una política nuestra sino lo que mmdr sabe interpretar, y
-eso son exactamente dos cadenas —`<br>` y `<br/>`—: ésas conviven sin aviso porque
-hacen lo que el agente quería, y todo lo demás con forma de marcado —etiquetas,
-entidades `&…;` y escapes `#…;`— se dibuja y se avisa. Se avisa y no se rechaza
-porque es ver de más **una palabra**, no un nodo: la estructura no miente, y tirar
-el dibujo entero cobraría la explicación por un defecto de texto.
-_Avoid_: HTML a secas, basura, marcado sin más
+**Literal markup**:
+The markup the agent writes inside a label's text and that reaches the drawing
+exactly as written: `<b>recolocacion</b>` in the box, angle brackets and all. It is
+the fourth thing the flipchart warns about, and the only one that does not travel in
+an IR field but inside the label, so emptying the style does not touch it. Its
+boundary is not a policy of ours but what mmdr can interpret, and that is exactly
+two strings —`<br>` and `<br/>`—: those coexist without a warning because they do
+what the agent wanted, and everything else shaped like markup —tags, `&…;` entities
+and `#…;` escapes— is drawn and warned about. It is warned about and not rejected
+because it is seeing **one word** in excess, not a node: the structure does not lie,
+and throwing away the whole drawing would charge for the explanation over a defect
+of text.
+_Avoid_: HTML on its own, garbage, markup without qualification
 
-### Las piezas vivas
+### The live pieces
 
-**Servidor MCP**:
-Lo que expone las herramientas al agente y es **dueño del estado** de la pizarra.
-La verdad vive aquí. No es un proceso propio: comparte proceso con el Visor y
-vive en un hilo distinto del suyo.
+**MCP server**:
+What exposes the tools to the agent and is the **owner of the state** of the
+flipchart. The truth lives here. It is not a process of its own: it shares a process
+with the Viewer and lives in a different thread from it.
 _Avoid_: backend, host
 
-**Visor**:
-Lo que recibe una escena y la pinta, en su propia ventana: una hoja a la vista,
-titulada con el id de su Vista, y la que el agente acaba de mostrar delante. Es tonto por
-diseño: no guarda nada, y cerrar su ventana no pierde nada porque el estado no es
-suyo.
-No se reinicia: su ventana se oculta y se vuelve a mostrar dentro del mismo
-proceso, que sólo muere con la sesión MCP.
-_Avoid_: frontend, cliente, viewer, app, página
+**Viewer** — `viewer.rs` in code:
+What receives a scene and paints it, in its own window: one sheet in sight, titled
+with the id of its View, and the one the agent has just shown at the front. It is
+dumb by design: it keeps nothing, and closing its window loses nothing because the
+state is not its own.
+It does not restart: its window is hidden and shown again within the same process,
+which only dies with the MCP session.
+_Avoid_: frontend, client, app, page
 
-**Superficie de entrega**:
-Por dónde llega el visor a los ojos del usuario. Distinta de la Drawing Surface,
-que es con qué se pinta dentro.
-_Avoid_: superficie a secas
+**Delivery surface**:
+How the viewer reaches the user's eyes. Distinct from the Drawing Surface, which is
+what the painting is done with inside.
+_Avoid_: surface on its own
 
-**Lanzador**:
-Lo que el host invoca para que exista el Proceso de la pizarra. **No lo trae**: el
-ejecutable ya está en la máquina cuando el lanzador corre. Pero sí lo deja utilizable
-—puede llegar sin permiso de ejecución, y dárselo es trabajo suyo—, porque nadie
-promete en qué estado aparece. Y nunca falla, porque su fallo no se ve como un error
-sino como una pizarra que deja de existir sin decir por qué; cuando no puede cederle
-el sitio, se queda hablando él como Servidor de aviso.
-_Avoid_: instalador, wrapper, shim, script de arranque
+**Launcher** — `launcher.sh` in code:
+What the host invokes so that the Flipchart process exists. **It does not bring it**:
+the executable is already on the machine when the launcher runs. But it does leave
+it usable —it may arrive without execute permission, and granting it is the
+launcher's job—, because nobody promises what state it turns up in. And it never
+fails, because its failure does not look like an error but like a flipchart that
+stops existing without saying why; when it cannot hand over its place, it stays and
+talks itself, as the Unavailable server.
+_Avoid_: installer, wrapper, shim, startup script
 
-**Servidor de aviso**:
-La cara del Lanzador cuando no hay Proceso de la pizarra al que ceder el sitio.
-Habla lo justo para decir que la pizarra no está operativa y qué se ha encontrado;
-no dibuja, no guarda nada y no intenta arreglarse. Existe porque el silencio es el
-único fallo que el producto no puede permitirse: no hay nadie más que pueda
-contárselo al usuario.
-_Avoid_: stub, fallback, modo degradado, servidor a secas
+**Unavailable server**:
+The Launcher's face when there is no Flipchart process to hand its place over to. It
+says just enough to state that the flipchart is not operational and what was found;
+it does not draw, keeps nothing and does not try to fix itself. It exists because
+silence is the only failure this product cannot afford: there is nobody else who can
+tell the user. It takes its name from the one tool it announces, `unavailable`,
+which is the whole of its surface.
+_Avoid_: stub, fallback, degraded mode, server on its own
 
-**Proceso de la pizarra**:
-El único proceso que hay, y que es a la vez Servidor MCP y Visor. Lo lanza el
-host como hijo y le habla por stdio. Reparte los dos papeles entre hilos: el
-principal dibuja, el secundario sirve. Cuál manda no es simétrico — el hilo que
-sirve es el que sabe qué hora es y el que decide cuándo sale el proceso, porque
-el que dibuja se congela cuando el sistema tapa la ventana.
-_Avoid_: demonio, daemon, servidor a secas
+**Flipchart process**:
+The only process there is, and which is both MCP server and Viewer. The host
+launches it as a child and talks to it over stdio. It splits the two roles between
+threads: the main one draws, the secondary one serves. Which one is in charge is not
+symmetric — the thread that serves is the one that knows what time it is and the one
+that decides when the process exits, because the one that draws freezes when the
+system covers the window.
+_Avoid_: daemon, server on its own
